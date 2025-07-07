@@ -26,7 +26,6 @@ namespace AwesomeCopilot.Evaluation
     /// </summary>
     public class EvaluationOrchestrator
     {
-        private readonly HttpClient _httpClient;
         private readonly string _githubToken;
         private readonly IChatClient _chatClient;
 
@@ -69,7 +68,6 @@ namespace AwesomeCopilot.Evaluation
 
         public EvaluationOrchestrator()
         {
-            _httpClient = new HttpClient();
             DotEnv.Load();
             _githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
             if (string.IsNullOrEmpty(_githubToken))
@@ -460,6 +458,7 @@ namespace AwesomeCopilot.Evaluation
                     new AzureKeyCredential(_githubToken)
                 ).AsIChatClient(model);
                 var startTime = DateTime.Now;
+
                 var response = await chatClient.GetResponseAsync(testPrompt);
                 var endTime = DateTime.Now;
                 return new Dictionary<string, object>
@@ -544,7 +543,8 @@ namespace AwesomeCopilot.Evaluation
             var results = new Dictionary<string, object>
             {
                 { "file", target },
-                { "evaluations", new List<Dictionary<string, object>>() }
+                { "evaluations", new List<Dictionary<string, object>>() },
+                { "evaluatorPrompt", evaluatorPromptPath }
             };
 
             var evaluations = (List<Dictionary<string, object>>)results["evaluations"];
@@ -739,16 +739,35 @@ namespace AwesomeCopilot.Evaluation
         {
             var fileInfo = evaluationResult.ContainsKey("file") ? evaluationResult["file"] : null;
             var evaluations = evaluationResult.ContainsKey("evaluations") ? evaluationResult["evaluations"] as List<Dictionary<string, object>> : null;
+            var testedFileName = "";
+            var testedFilePath = "";
+            var evaluatorPromptFile = evaluationResult.ContainsKey("evaluatorPrompt") ? evaluationResult["evaluatorPrompt"]?.ToString() : null;
+            // If not present, fallback to default prompt path logic for legacy results
+            if (string.IsNullOrEmpty(evaluatorPromptFile))
+            {
+                evaluatorPromptFile = "../prompts/evaluate-prompts-against-models.prompt.md";
+            }
+            if (fileInfo is Dictionary<string, object> fileDict)
+            {
+                testedFileName = fileDict.ContainsKey("Filename") ? fileDict["Filename"]?.ToString() : "";
+                testedFilePath = fileDict.ContainsKey("Path") ? fileDict["Path"]?.ToString() : "";
+            }
             var sb = new StringBuilder();
             sb.AppendLine("<html><head><title>Evaluation Report</title><style>body{font-family:sans-serif;}table{border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px;}th{background:#eee;}</style></head><body>");
             sb.AppendLine("<h1>Evaluation Report</h1>");
+            sb.AppendLine("<div style='margin-bottom:1em;'>");
+            sb.AppendLine($"<b>Tested File Name:</b> {System.Net.WebUtility.HtmlEncode(testedFileName)}<br>");
+            sb.AppendLine($"<b>Tested File Path:</b> {System.Net.WebUtility.HtmlEncode(testedFilePath)}<br>");
+            sb.AppendLine($"<b>Evaluation Prompt File:</b> {System.Net.WebUtility.HtmlEncode(evaluatorPromptFile)}<br>");
+            sb.AppendLine($"<b>Report Generated:</b> {DateTime.Now:O}");
+            sb.AppendLine("</div>");
             if (fileInfo != null)
             {
                 sb.AppendLine("<h2>File Information</h2><ul>");
-                var fileDict = fileInfo as Dictionary<string, object>;
-                if (fileDict != null)
+                var fileDictInner = fileInfo as Dictionary<string, object>;
+                if (fileDictInner != null)
                 {
-                    foreach (var kv in fileDict)
+                    foreach (var kv in fileDictInner)
                     {
                         sb.AppendLine($"<li><b>{kv.Key}:</b> {kv.Value}</li>");
                     }
@@ -808,11 +827,6 @@ namespace AwesomeCopilot.Evaluation
             Console.WriteLine("Available Models:");
             Console.WriteLine($"  {string.Join(", ", _models)}");
         }
-
-        public void Dispose()
-        {
-            _httpClient?.Dispose();
-        }
     }
 
     class Program
@@ -821,7 +835,6 @@ namespace AwesomeCopilot.Evaluation
         {
             var orchestrator = new EvaluationOrchestrator();
             await orchestrator.Main(args);
-            orchestrator.Dispose();
         }
     }
 }

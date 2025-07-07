@@ -6,15 +6,15 @@ description: 'Evaluate and compare the effectiveness of prompts, instructions, a
 
 # Evaluate Prompts Against Models
 
-Systematically evaluate and compare the effectiveness of prompts, instructions, and chatmodes from the awesome-copilot repository against different LLM models to assess quality, consistency, and performance.
+
+Systematically evaluate the effectiveness of prompts, instructions, and chatmodes from the awesome-copilot repository against a single LLM model to assess quality, consistency, and performance.
 
 ## Primary Objectives
 
-1. **Model Comparison**: Test prompts against multiple LLM models (GPT-4.1-mini, GPT-4o, Phi-4-mini-instruct, Meta-Llama-3.1-8B-Instruct, etc.)
-2. **Quality Assessment**: Evaluate prompt effectiveness, clarity, and output quality
-3. **Performance Analysis**: Measure response time, token usage, and cost efficiency
-4. **Consistency Testing**: Verify consistent behavior across different model versions
-5. **Improvement Recommendations**: Provide actionable suggestions for prompt optimization
+1. **Quality Assessment**: Evaluate prompt effectiveness, clarity, and output quality
+2. **Performance Analysis**: Measure response time, token usage, and cost efficiency
+3. **Consistency Testing**: Verify consistent behavior across multiple runs
+4. **Improvement Recommendations**: Provide actionable suggestions for prompt optimization
 
 ## Evaluation Framework
 
@@ -33,11 +33,8 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 
 ### 2. Model Testing Configuration
 
-**Target Models:**
-- GPT-4.1-mini (latest cost-effective OpenAI model)
-- Phi-4-mini-instruct (Microsoft's newest compact model)
-- Meta-Llama-3.1-8B-Instruct (Meta's compact model)
-- Mistral-Nemo (Mistral AI's compact model)
+**Target Model:**
+- [Specify the single LLM model to be used for evaluation]
 
 **Test Parameters:**
 - Temperature: 0.1 (consistent), 0.7 (creative), 1.0 (diverse)
@@ -46,6 +43,7 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 - Frequency penalty: 0.0, 0.5, 1.0
 
 ### 3. Evaluation Metrics
+
 
 **Quality Metrics:**
 - **Accuracy**: Correctness of generated code/content
@@ -132,6 +130,7 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 3. **Trend Identification**: Identify patterns in performance
 4. **Recommendation Generation**: Create actionable insights
 
+
 ## Output Format
 
 ### Evaluation Report Structure
@@ -140,39 +139,38 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 # Prompt Evaluation Report
 
 ## Executive Summary
-- **Best Performing Model**: [Model Name] with [Score]
-- **Most Cost-Effective**: [Model Name] at [Cost per Token]
-- **Fastest Response**: [Model Name] at [Avg Response Time]
-- **Most Consistent**: [Model Name] with [Consistency Score]
+
 
 ## Detailed Results
 
-### Model Performance Comparison
-| Model | Accuracy | Relevance | Completeness | Clarity | Consistency | Avg Cost | Avg Time |
-|-------|----------|-----------|--------------|---------|-------------|----------|----------|
-| GPT-4.1-mini | 87% | 91% | 89% | 93% | 87% | $0.012 | 2.1s |
-| Phi-4-mini-instruct | 84% | 87% | 82% | 90% | 84% | $0.006 | 1.9s |
-| Meta-Llama-3.1-8B-Instruct | 80% | 83% | 78% | 86% | 80% | $0.004 | 1.6s |
-| Mistral-Nemo | 82% | 85% | 80% | 88% | 82% | $0.005 | 1.8s |
+
+
+### Model Performance Results
+| Metric | Value |
+|--------|-------|
+| Accuracy | [X]% |
+| Relevance | [X]% |
+| Completeness | [X]% |
+| Clarity | [X]% |
+| Consistency | [X]% |
+| Avg Cost | $[X] |
+| Avg Time | [X]s |
+
 
 ### Prompt-Specific Analysis
+
 #### [Prompt Name]
-- **Best Model**: [Model Name] (Score: [X]%)
 - **Strengths**: [List key strengths]
 - **Weaknesses**: [List areas for improvement]
 - **Recommendations**: [Specific optimization suggestions]
 
 ## Recommendations
 
-### Model Selection Guidelines
-- **For Cost-Sensitive Projects**: Use Meta-Llama-3.1-8B-Instruct or Mistral-Nemo
-- **For Maximum Quality**: Use GPT-4.1-mini
-- **For Balanced Performance**: Use Phi-4-mini-instruct
+
 
 ### Prompt Optimization Opportunities
 1. **High-Impact Improvements**: [List top 3 prompts to optimize]
-2. **Model-Specific Tuning**: [Recommendations for specific models]
-3. **General Enhancements**: [Universal improvements across all models]
+2. **General Enhancements**: [Universal improvements]
 ```
 
 ## Implementation Guidelines
@@ -219,10 +217,11 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 
 ## Next Steps
 
+
 1. **Pilot Evaluation**: Run initial tests on 5-10 representative prompts
 2. **Framework Refinement**: Adjust evaluation criteria based on pilot results
 3. **Full-Scale Testing**: Evaluate all prompts in the repository
 4. **Documentation Update**: Integrate findings into repository documentation
 5. **Community Sharing**: Publish evaluation methodology and results
 
-When executing this evaluation, provide detailed analysis, comparative insights, and actionable recommendations for optimizing the awesome-copilot repository's prompts and instructions across different LLM models.
+When executing this evaluation, provide detailed analysis and actionable recommendations for optimizing the awesome-copilot repository's prompts and instructions using the selected LLM model.
