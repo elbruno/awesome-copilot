@@ -2,3 +2,7 @@ node_modules
 *.orig
 Copilot-Processing.md
 evaluation-results/
+
+# .NET build artifacts
+scripts/bin/
+scripts/obj/
