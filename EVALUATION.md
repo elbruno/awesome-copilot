@@ -98,8 +98,8 @@ Total files: 67
 - Prompts: 36
 - Instructions: 22
 - Chatmodes: 9
-Models to test: 10
-Total evaluation combinations: 670
+Models to test: 13
+Total evaluation combinations: 871
 ```
 
 ### Step 3: Create Evaluation Plan
@@ -179,9 +179,9 @@ python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md
 dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md
 
 # Example: Evaluate against specific model
-node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
-python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
-dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
+python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
+dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
 ```
 
 ### Step 5: Conduct Evaluations
@@ -200,8 +200,11 @@ The framework supports evaluation against multiple LLM models available through 
 
 - **GPT-4o-mini** - Cost-effective OpenAI model
 - **GPT-4o** - High-quality OpenAI model  
+- **GPT-4.1-mini** - Latest cost-effective OpenAI model
 - **Phi-3-mini-128k-instruct** - Microsoft compact model
 - **Phi-3-medium-128k-instruct** - Microsoft medium model
+- **Phi-4-mini-instruct** - Microsoft latest compact model
+- **Meta-Llama-3.1-8B-Instruct** - Meta compact model
 - **Meta-Llama-3.1-70B-Instruct** - Meta large model
 - **Meta-Llama-3.1-405B-Instruct** - Meta extra large model
 - **Mistral-large** - Mistral AI large model
@@ -249,9 +252,9 @@ python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md
 dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md
 
 # Evaluate a specific file against a specific model
-node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
-python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
-dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
+python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
+dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
 ```
 
 ### Example 2: Using GitHub Copilot Chat
@@ -261,7 +264,7 @@ I want to evaluate the `create-implementation-plan.prompt.md` against different 
 
 Please use the prompt-evaluator chatmode to:
 1. Analyze the prompt structure and content
-2. Test it against GPT-4o-mini, GPT-4o, and Phi-3-mini-128k-instruct
+2. Test it against GPT-4o-mini, GPT-4o, and Phi-4-mini-instruct
 3. Compare response quality, speed, and cost
 4. Provide optimization recommendations
 ```

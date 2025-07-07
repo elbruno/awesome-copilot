@@ -164,9 +164,9 @@ python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md
 dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md
 
 # NEW: Evaluate a specific file against a specific model
-node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
-python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
-dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
+python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
+dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
 ```
 dotnet run --project scripts/EvaluationOrchestrator.csproj report  # .NET
 ```

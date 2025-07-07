@@ -37,8 +37,11 @@ const CONFIG = {
   models: [
     'gpt-4o-mini',
     'gpt-4o',
+    'GPT-4.1-mini',
     'Phi-3-mini-128k-instruct',
     'Phi-3-medium-128k-instruct',
+    'Phi-4-mini-instruct',
+    'Meta-Llama-3.1-8B-Instruct',
     'Meta-Llama-3.1-70B-Instruct',
     'Meta-Llama-3.1-405B-Instruct',
     'Mistral-large',

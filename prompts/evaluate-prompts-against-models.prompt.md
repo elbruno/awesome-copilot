@@ -10,7 +10,7 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 
 ## Primary Objectives
 
-1. **Model Comparison**: Test prompts against multiple LLM models (GPT-4.1-mini, GPT-4, Claude-3.5-Sonnet, etc.)
+1. **Model Comparison**: Test prompts against multiple LLM models (GPT-4.1-mini, GPT-4o, Phi-4-mini-instruct, Meta-Llama-3.1-8B-Instruct, etc.)
 2. **Quality Assessment**: Evaluate prompt effectiveness, clarity, and output quality
 3. **Performance Analysis**: Measure response time, token usage, and cost efficiency
 4. **Consistency Testing**: Verify consistent behavior across different model versions
@@ -36,8 +36,11 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 **Target Models:**
 - GPT-4o-mini (latest cost-effective model)
 - GPT-4o (standard reference model)
+- GPT-4.1-mini (newest cost-effective model)
 - Phi-3-mini-128k-instruct (Microsoft small model)
 - Phi-3-medium-128k-instruct (Microsoft medium model)
+- Phi-4-mini-instruct (Microsoft latest compact model)
+- Meta-Llama-3.1-8B-Instruct (Meta compact model)
 - Meta-Llama-3.1-70B-Instruct (Meta large model)
 - Meta-Llama-3.1-405B-Instruct (Meta extra large model)
 - Mistral-large (Mistral AI large model)
@@ -158,7 +161,10 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 |-------|----------|-----------|--------------|---------|-------------|----------|----------|
 | GPT-4o-mini | 85% | 90% | 88% | 92% | 85% | $0.015 | 2.3s |
 | GPT-4o | 92% | 94% | 91% | 94% | 90% | $0.060 | 3.1s |
+| GPT-4.1-mini | 87% | 91% | 89% | 93% | 87% | $0.012 | 2.1s |
 | Phi-3-mini-128k-instruct | 82% | 85% | 80% | 88% | 82% | $0.005 | 1.8s |
+| Phi-4-mini-instruct | 84% | 87% | 82% | 90% | 84% | $0.006 | 1.9s |
+| Meta-Llama-3.1-8B-Instruct | 80% | 83% | 78% | 86% | 80% | $0.004 | 1.6s |
 
 ### Prompt-Specific Analysis
 #### [Prompt Name]
@@ -170,7 +176,7 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 ## Recommendations
 
 ### Model Selection Guidelines
-- **For Cost-Sensitive Projects**: Use GPT-4o-mini or Phi-3-mini-128k-instruct
+- **For Cost-Sensitive Projects**: Use GPT-4.1-mini, Meta-Llama-3.1-8B-Instruct or Phi-4-mini-instruct
 - **For Maximum Quality**: Use GPT-4o or Meta-Llama-3.1-405B-Instruct
 - **For Balanced Performance**: Use Mistral-large or Cohere-command-r-plus
 

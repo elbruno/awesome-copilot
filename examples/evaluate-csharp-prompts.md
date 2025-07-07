@@ -40,8 +40,9 @@ I want to evaluate C# development prompts against different models:
 
 2. Test against:
    - GPT-4.1-mini
-   - GPT-4
-   - Claude-3.5-Sonnet
+   - GPT-4o
+   - Phi-4-mini-instruct
+   - Meta-Llama-3.1-8B-Instruct
 
 3. Focus on:
    - Code quality and best practices
@@ -61,7 +62,7 @@ Please evaluate the csharp-async.prompt.md file:
 
 1. Analyze the prompt structure and content quality
 2. Test it with a sample async method scenario
-3. Compare results between GPT-4.1-mini and GPT-4
+3. Compare results between GPT-4.1-mini and GPT-4o
 4. Provide optimization recommendations
 ```
 
@@ -88,8 +89,9 @@ You should be able to determine:
 
 Based on typical evaluations, you might find:
 
-- **GPT-4**: Highest code quality, best practices adherence
+- **GPT-4o**: Highest code quality, best practices adherence
 - **GPT-4.1-mini**: Good balance of quality and cost
-- **Claude-3.5-Sonnet**: Excellent documentation and explanations
+- **Phi-4-mini-instruct**: Excellent compact model performance
+- **Meta-Llama-3.1-8B-Instruct**: Cost-effective alternative with solid performance
 
 This data helps you make informed decisions about which model to use for different C# development scenarios.
