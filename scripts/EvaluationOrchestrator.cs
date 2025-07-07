@@ -519,6 +519,12 @@ namespace AwesomeCopilot.Evaluation
             if (target == null)
                 return new Dictionary<string, object> { { "error", "File not found or invalid" } };
 
+            // Load the evaluation prompt template
+            var evalPromptPath = Path.Combine("..", "prompts", "evaluate-prompts-against-models.prompt.md");
+            if (!File.Exists(evalPromptPath))
+                return new Dictionary<string, object> { { "error", "Evaluation prompt template not found" } };
+            var evalPromptTemplate = File.ReadAllText(evalPromptPath);
+
             var modelsToTest = model != null ? new[] { model } : _models;
             var results = new Dictionary<string, object>
             {
@@ -532,9 +538,9 @@ namespace AwesomeCopilot.Evaluation
             {
                 Console.WriteLine($"Evaluating {target.Filename} with model {testModel}...");
 
-                // Create a basic test prompt based on the file content
+                // Inject the file content into the evaluation prompt template
                 var fileContent = File.ReadAllText(filePath);
-                var testPrompt = $"Please evaluate this {target.Type.TrimEnd('s')} content:\n\n{fileContent}\n\nProvide a brief assessment of its quality and effectiveness.";
+                var testPrompt = $"{evalPromptTemplate}\n\n---\n\n# Target File Content\n\n{fileContent}\n\n---\n\nPlease evaluate the above file according to the evaluation methodology.";
 
                 var evaluation = await RunEvaluation(filePath, testModel, testPrompt);
                 evaluation["model"] = testModel;
@@ -667,7 +673,12 @@ namespace AwesomeCopilot.Evaluation
                     var resultJson = JsonSerializer.Serialize(evaluationResult, new JsonSerializerOptions { WriteIndented = true });
                     await File.WriteAllTextAsync(resultFile, resultJson);
 
+                    // Generate HTML report
+                    var htmlReportFile = Path.Combine(_outputDir, $"evaluation-result-{timestamp}.html");
+                    var htmlReport = GenerateHtmlReport(evaluationResult);
+                    await File.WriteAllTextAsync(htmlReportFile, htmlReport);
                     Console.WriteLine($"Evaluation completed. Results saved to: {resultFile}");
+                    Console.WriteLine($"HTML report saved to: {htmlReportFile}");
                     break;
 
                 case "test-connection":
@@ -688,6 +699,44 @@ namespace AwesomeCopilot.Evaluation
                     PrintHelp();
                     break;
             }
+        }
+
+        private string GenerateHtmlReport(Dictionary<string, object> evaluationResult)
+        {
+            var fileInfo = evaluationResult.ContainsKey("file") ? evaluationResult["file"] : null;
+            var evaluations = evaluationResult.ContainsKey("evaluations") ? evaluationResult["evaluations"] as List<Dictionary<string, object>> : null;
+            var sb = new StringBuilder();
+            sb.AppendLine("<html><head><title>Evaluation Report</title><style>body{font-family:sans-serif;}table{border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px;}th{background:#eee;}</style></head><body>");
+            sb.AppendLine("<h1>Evaluation Report</h1>");
+            if (fileInfo != null)
+            {
+                sb.AppendLine("<h2>File Information</h2><ul>");
+                var fileDict = fileInfo as Dictionary<string, object>;
+                if (fileDict != null)
+                {
+                    foreach (var kv in fileDict)
+                    {
+                        sb.AppendLine($"<li><b>{kv.Key}:</b> {kv.Value}</li>");
+                    }
+                }
+                sb.AppendLine("</ul>");
+            }
+            if (evaluations != null)
+            {
+                sb.AppendLine("<h2>Evaluations</h2><table><tr><th>Model</th><th>Success</th><th>Response</th><th>Response Time (s)</th><th>Error</th></tr>");
+                foreach (var eval in evaluations)
+                {
+                    var model = eval.ContainsKey("model") ? eval["model"] : "";
+                    var success = eval.ContainsKey("success") ? eval["success"] : "";
+                    var response = eval.ContainsKey("response") ? eval["response"] : "";
+                    var responseTime = eval.ContainsKey("response_time") ? eval["response_time"] : "";
+                    var error = eval.ContainsKey("error") ? eval["error"] : "";
+                    sb.AppendLine($"<tr><td>{model}</td><td>{success}</td><td><pre style='max-width:600px;white-space:pre-wrap;'>{System.Net.WebUtility.HtmlEncode(response?.ToString() ?? "")}</pre></td><td>{responseTime}</td><td>{System.Net.WebUtility.HtmlEncode(error?.ToString() ?? "")}</td></tr>");
+                }
+                sb.AppendLine("</table>");
+            }
+            sb.AppendLine("</body></html>");
+            return sb.ToString();
         }
 
         private void PrintHelp()
