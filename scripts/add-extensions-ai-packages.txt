@@ -1,0 +1,3 @@
+// This file adds the required NuGet packages for Microsoft.Extensions.AI and OpenAI support
+// Run: dotnet add package Microsoft.Extensions.AI.OpenAI --prerelease
+// Run: dotnet add package Microsoft.Extensions.DependencyInjection

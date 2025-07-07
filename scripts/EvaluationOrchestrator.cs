@@ -3,16 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using Azure;
+using Azure.AI.Inference;
+using Microsoft.Extensions.AI;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using dotenv.net;
 using System.Threading.Tasks;
 
 namespace AwesomeCopilot.Evaluation
 {
     /// <summary>
     /// Prompt Evaluation Orchestrator - .NET Version
-    /// 
+    ///
     /// This program helps orchestrate the evaluation of prompts, instructions, and chatmodes
     /// against different LLM models using GitHub Models. It provides utilities for:
     /// - Discovering evaluation targets
@@ -24,7 +28,8 @@ namespace AwesomeCopilot.Evaluation
     {
         private readonly HttpClient _httpClient;
         private readonly string _githubToken;
-        
+        private readonly IChatClient _chatClient;
+
         // Configuration
         private readonly Dictionary<string, string> _directories = new()
         {
@@ -32,23 +37,23 @@ namespace AwesomeCopilot.Evaluation
             { "instructions", "../instructions" },
             { "chatmodes", "../chatmodes" }
         };
-        
+
         private readonly Dictionary<string, string> _extensions = new()
         {
             { "prompts", ".prompt.md" },
             { "instructions", ".instructions.md" },
             { "chatmodes", ".chatmode.md" }
         };
-        
+
         private readonly string _outputDir = "evaluation-results";
-        
+
         private readonly string[] _models = {
             "GPT-4.1-mini",
             "Phi-4-mini-instruct",
             "Meta-Llama-3.1-8B-Instruct",
             "Mistral-Nemo"
         };
-        
+
         private readonly string[] _metrics = {
             "accuracy",
             "relevance",
@@ -59,54 +64,27 @@ namespace AwesomeCopilot.Evaluation
             "token_usage",
             "cost_efficiency"
         };
-        
+
         private readonly string _baseUrl = "https://models.inference.ai.azure.com";
-        
+
         public EvaluationOrchestrator()
         {
             _httpClient = new HttpClient();
-            
-            // Try to load GitHub token from environment variable first
+            DotEnv.Load();
             _githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-            
-            // If not found, try to load from .env file
-            if (string.IsNullOrEmpty(_githubToken))
-            {
-                _githubToken = LoadGitHubTokenFromEnvFile();
-            }
-            
             if (string.IsNullOrEmpty(_githubToken))
             {
                 Console.WriteLine("Warning: GITHUB_TOKEN not found in environment variable or .env file. GitHub Models API calls will fail.");
             }
-            else
-            {
-                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_githubToken}");
-            }
+            // Use Azure.AI.Inference and Microsoft.Extensions.AI for MEAI
+            _chatClient = new ChatCompletionsClient(
+                endpoint: new Uri(_baseUrl),
+                new AzureKeyCredential(_githubToken)
+            ).AsIChatClient(_models[0]); // Default to first model, can be changed per request
         }
-        
-        private string LoadGitHubTokenFromEnvFile()
-        {
-            var envFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env");
-            if (File.Exists(envFilePath))
-            {
-                var lines = File.ReadAllLines(envFilePath);
-                foreach (var line in lines)
-                {
-                    var trimmedLine = line.Trim();
-                    if (!string.IsNullOrEmpty(trimmedLine) && !trimmedLine.StartsWith("#") && trimmedLine.Contains("="))
-                    {
-                        var parts = trimmedLine.Split('=', 2);
-                        if (parts.Length == 2 && parts[0].Trim() == "GITHUB_TOKEN")
-                        {
-                            return parts[1].Trim();
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-        
+
+        // Removed manual .env parsing; using dotenv.net instead
+
         public class EvaluationTarget
         {
             public string Filename { get; set; }
@@ -116,14 +94,14 @@ namespace AwesomeCopilot.Evaluation
             public string Type { get; set; }
             public Dictionary<string, object> Frontmatter { get; set; }
         }
-        
+
         public class EvaluationPlan
         {
             public Dictionary<string, object> Metadata { get; set; }
             public List<EvaluationMatrix> EvaluationMatrix { get; set; }
             public List<string> Recommendations { get; set; }
         }
-        
+
         public class EvaluationMatrix
         {
             public EvaluationTarget Target { get; set; }
@@ -132,32 +110,32 @@ namespace AwesomeCopilot.Evaluation
             public string Status { get; set; }
             public List<string> TestCases { get; set; }
         }
-        
+
         private Dictionary<string, object> ExtractFrontmatter(string filePath)
         {
             try
             {
                 var content = File.ReadAllText(filePath);
                 var lines = content.Split('\n');
-                
+
                 if (lines.Length == 0 || lines[0] != "---")
                     return new Dictionary<string, object>();
-                
+
                 var frontmatter = new Dictionary<string, object>();
                 var inFrontmatter = false;
-                
+
                 for (int i = 1; i < lines.Length; i++)
                 {
                     var line = lines[i];
-                    
+
                     if (line == "---")
                     {
                         break;
                     }
-                    
+
                     if (i == 1)
                         inFrontmatter = true;
-                    
+
                     if (inFrontmatter)
                     {
                         var match = Regex.Match(line, @"^([^:]+):\s*(.*)$");
@@ -165,19 +143,19 @@ namespace AwesomeCopilot.Evaluation
                         {
                             var key = match.Groups[1].Value.Trim();
                             var value = match.Groups[2].Value.Trim();
-                            
+
                             // Remove quotes if present
                             if ((value.StartsWith("\"") && value.EndsWith("\"")) ||
                                 (value.StartsWith("'") && value.EndsWith("'")))
                             {
                                 value = value.Substring(1, value.Length - 2);
                             }
-                            
+
                             frontmatter[key] = value;
                         }
                     }
                 }
-                
+
                 return frontmatter;
             }
             catch (Exception ex)
@@ -186,17 +164,17 @@ namespace AwesomeCopilot.Evaluation
                 return new Dictionary<string, object>();
             }
         }
-        
+
         private string ExtractTitle(string filePath)
         {
             try
             {
                 var content = File.ReadAllText(filePath);
                 var lines = content.Split('\n');
-                
+
                 var inFrontmatter = false;
                 var frontmatterEnded = false;
-                
+
                 foreach (var line in lines)
                 {
                     if (line.Trim() == "---")
@@ -211,13 +189,13 @@ namespace AwesomeCopilot.Evaluation
                         }
                         continue;
                     }
-                    
+
                     if (frontmatterEnded && line.StartsWith("# "))
                     {
                         return line.Substring(2).Trim();
                     }
                 }
-                
+
                 // Fallback to filename
                 var basename = Path.GetFileNameWithoutExtension(filePath);
                 return basename.Replace("-", " ").Replace("_", " ");
@@ -228,7 +206,7 @@ namespace AwesomeCopilot.Evaluation
                 return "Unknown";
             }
         }
-        
+
         public Dictionary<string, List<EvaluationTarget>> DiscoverEvaluationTargets()
         {
             var targets = new Dictionary<string, List<EvaluationTarget>>
@@ -237,26 +215,26 @@ namespace AwesomeCopilot.Evaluation
                 { "instructions", new List<EvaluationTarget>() },
                 { "chatmodes", new List<EvaluationTarget>() }
             };
-            
+
             foreach (var kvp in _directories)
             {
                 var type = kvp.Key;
                 var directory = kvp.Value;
-                
+
                 if (!Directory.Exists(directory))
                 {
                     Console.WriteLine($"Warning: Directory not found: {directory}");
                     continue;
                 }
-                
+
                 var extension = _extensions[type];
                 var files = Directory.GetFiles(directory, $"*{extension}");
-                
+
                 foreach (var file in files)
                 {
                     var frontmatter = ExtractFrontmatter(file);
                     var title = ExtractTitle(file);
-                    
+
                     targets[type].Add(new EvaluationTarget
                     {
                         Filename = Path.GetFileName(file),
@@ -268,10 +246,10 @@ namespace AwesomeCopilot.Evaluation
                     });
                 }
             }
-            
+
             return targets;
         }
-        
+
         public EvaluationPlan GenerateEvaluationPlan(Dictionary<string, List<EvaluationTarget>> targets)
         {
             var plan = new EvaluationPlan
@@ -285,27 +263,27 @@ namespace AwesomeCopilot.Evaluation
                 EvaluationMatrix = new List<EvaluationMatrix>(),
                 Recommendations = new List<string>()
             };
-            
+
             // Calculate totals
             var totalTargets = 0;
             var targetsByType = new Dictionary<string, int>();
-            
+
             foreach (var kvp in targets)
             {
                 var count = kvp.Value.Count;
                 targetsByType[kvp.Key] = count;
                 totalTargets += count;
             }
-            
+
             plan.Metadata["total_targets"] = totalTargets;
             plan.Metadata["targets_by_type"] = targetsByType;
-            
+
             // Generate evaluation matrix
             foreach (var kvp in targets)
             {
                 var type = kvp.Key;
                 var items = kvp.Value;
-                
+
                 foreach (var item in items)
                 {
                     foreach (var model in _models)
@@ -315,7 +293,7 @@ namespace AwesomeCopilot.Evaluation
                         {
                             metrics[metric] = null;
                         }
-                        
+
                         plan.EvaluationMatrix.Add(new EvaluationMatrix
                         {
                             Target = item,
@@ -333,15 +311,15 @@ namespace AwesomeCopilot.Evaluation
                     }
                 }
             }
-            
+
             return plan;
         }
-        
+
         public string CreateEvaluationReport(Dictionary<string, List<EvaluationTarget>> targets)
         {
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd");
             var totalFiles = targets.Values.Sum(v => v.Count);
-            
+
             var report = new StringBuilder();
             report.AppendLine($"# Awesome Copilot Evaluation Report");
             report.AppendLine($"Generated: {DateTime.Now:O}");
@@ -369,23 +347,23 @@ namespace AwesomeCopilot.Evaluation
             report.AppendLine("### Model Performance Overview");
             report.AppendLine("| Model | Avg Accuracy | Avg Relevance | Avg Completeness | Avg Clarity | Avg Consistency | Avg Cost | Avg Time |");
             report.AppendLine("|-------|--------------|---------------|------------------|-------------|-----------------|----------|----------|");
-            
+
             foreach (var model in _models)
             {
                 report.AppendLine($"| {model} | TBD | TBD | TBD | TBD | TBD | TBD | TBD |");
             }
-            
+
             report.AppendLine();
             report.AppendLine("### Evaluation by Type");
             report.AppendLine();
-            
+
             foreach (var kvp in targets)
             {
                 var type = kvp.Key;
                 var items = kvp.Value;
-                
+
                 report.AppendLine($"#### {char.ToUpper(type[0])}{type.Substring(1)} ({items.Count} files)");
-                
+
                 foreach (var item in items)
                 {
                     report.AppendLine();
@@ -396,10 +374,10 @@ namespace AwesomeCopilot.Evaluation
                     report.AppendLine("- **Overall Score**: TBD/10");
                     report.AppendLine("- **Recommendations**: TBD");
                 }
-                
+
                 report.AppendLine();
             }
-            
+
             report.AppendLine();
             report.AppendLine("## Recommendations");
             report.AppendLine();
@@ -450,33 +428,18 @@ namespace AwesomeCopilot.Evaluation
             report.AppendLine();
             report.AppendLine("### D. GitHub Models Integration");
             report.AppendLine("[Details on GitHub Models API usage and authentication]");
-            
+
             return report.ToString();
         }
-        
+
         public async Task<bool> TestGitHubModelsConnection()
         {
             if (string.IsNullOrEmpty(_githubToken))
                 return false;
-            
-            var url = $"{_baseUrl}/gpt-4o-mini/chat/completions";
-            
-            var data = new
-            {
-                messages = new[]
-                {
-                    new { role = "user", content = "Hello, this is a test message." }
-                },
-                max_tokens = 10
-            };
-            
             try
             {
-                var json = JsonSerializer.Serialize(data);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                
-                var response = await _httpClient.PostAsync(url, content);
-                return response.IsSuccessStatusCode;
+                var response = await _chatClient.GetResponseAsync("Hello, this is a test message.");
+                return !string.IsNullOrEmpty(response.Text);
             }
             catch (Exception ex)
             {
@@ -484,57 +447,29 @@ namespace AwesomeCopilot.Evaluation
                 return false;
             }
         }
-        
+
         public async Task<Dictionary<string, object>> RunEvaluation(string targetFile, string model, string testPrompt)
         {
             if (string.IsNullOrEmpty(_githubToken))
                 return new Dictionary<string, object> { { "error", "GitHub token not available" } };
-            
-            var url = $"{_baseUrl}/{model}/chat/completions";
-            
-            var data = new
-            {
-                messages = new[]
-                {
-                    new { role = "user", content = testPrompt }
-                },
-                max_tokens = 2000,
-                temperature = 0.7
-            };
-            
             try
             {
+                // Use the requested model for this evaluation
+                var chatClient = new ChatCompletionsClient(
+                    endpoint: new Uri(_baseUrl),
+                    new AzureKeyCredential(_githubToken)
+                ).AsIChatClient(model);
                 var startTime = DateTime.Now;
-                var json = JsonSerializer.Serialize(data);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                
-                var response = await _httpClient.PostAsync(url, content);
+                var response = await chatClient.GetResponseAsync(testPrompt);
                 var endTime = DateTime.Now;
-                
-                if (response.IsSuccessStatusCode)
+                return new Dictionary<string, object>
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(responseContent);
-                    
-                    return new Dictionary<string, object>
-                    {
-                        { "success", true },
-                        { "response", result },
-                        { "response_time", (endTime - startTime).TotalSeconds },
-                        { "model", model },
-                        { "target_file", targetFile }
-                    };
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return new Dictionary<string, object>
-                    {
-                        { "success", false },
-                        { "error", $"API request failed with status {response.StatusCode}" },
-                        { "response", errorContent }
-                    };
-                }
+                    { "success", true },
+                    { "response", response.Text },
+                    { "response_time", (endTime - startTime).TotalSeconds },
+                    { "model", model },
+                    { "target_file", targetFile }
+                };
             }
             catch (Exception ex)
             {
@@ -545,7 +480,7 @@ namespace AwesomeCopilot.Evaluation
                 };
             }
         }
-        
+
         public EvaluationTarget GetFileInfo(string filePath)
         {
             if (!File.Exists(filePath))
@@ -557,7 +492,7 @@ namespace AwesomeCopilot.Evaluation
             var frontmatter = ExtractFrontmatter(filePath);
             var title = ExtractTitle(filePath);
             var filename = Path.GetFileName(filePath);
-            
+
             // Determine file type based on extension
             string type = "unknown";
             if (filename.EndsWith(".prompt.md"))
@@ -596,15 +531,15 @@ namespace AwesomeCopilot.Evaluation
             foreach (var testModel in modelsToTest)
             {
                 Console.WriteLine($"Evaluating {target.Filename} with model {testModel}...");
-                
+
                 // Create a basic test prompt based on the file content
                 var fileContent = File.ReadAllText(filePath);
                 var testPrompt = $"Please evaluate this {target.Type.TrimEnd('s')} content:\n\n{fileContent}\n\nProvide a brief assessment of its quality and effectiveness.";
-                
+
                 var evaluation = await RunEvaluation(filePath, testModel, testPrompt);
                 evaluation["model"] = testModel;
                 evaluation["target"] = target.Filename;
-                
+
                 evaluations.Add(evaluation);
             }
 
@@ -618,9 +553,9 @@ namespace AwesomeCopilot.Evaluation
                 PrintHelp();
                 return;
             }
-            
+
             var command = args[0].ToLower();
-            
+
             switch (command)
             {
                 case "discover":
@@ -629,39 +564,39 @@ namespace AwesomeCopilot.Evaluation
                     var json = JsonSerializer.Serialize(targets, new JsonSerializerOptions { WriteIndented = true });
                     Console.WriteLine(json);
                     break;
-                    
+
                 case "plan":
                     Console.WriteLine("Generating evaluation plan...");
                     var planTargets = DiscoverEvaluationTargets();
                     var plan = GenerateEvaluationPlan(planTargets);
-                    
+
                     // Ensure output directory exists
                     Directory.CreateDirectory(_outputDir);
-                    
+
                     // Write plan to file
                     var planFile = Path.Combine(_outputDir, "evaluation-plan.json");
                     var planJson = JsonSerializer.Serialize(plan, new JsonSerializerOptions { WriteIndented = true });
                     await File.WriteAllTextAsync(planFile, planJson);
-                    
+
                     Console.WriteLine($"Evaluation plan generated: {planFile}");
                     Console.WriteLine($"Total evaluations planned: {plan.EvaluationMatrix.Count}");
                     break;
-                    
+
                 case "report":
                     Console.WriteLine("Creating evaluation report template...");
                     var reportTargets = DiscoverEvaluationTargets();
                     var report = CreateEvaluationReport(reportTargets);
-                    
+
                     // Ensure output directory exists
                     Directory.CreateDirectory(_outputDir);
-                    
+
                     // Write report to file
                     var reportFile = Path.Combine(_outputDir, "evaluation-report.md");
                     await File.WriteAllTextAsync(reportFile, report);
-                    
+
                     Console.WriteLine($"Evaluation report template created: {reportFile}");
                     break;
-                    
+
                 case "summary":
                     Console.WriteLine("Generating evaluation summary...");
                     var summaryTargets = DiscoverEvaluationTargets();
@@ -674,7 +609,7 @@ namespace AwesomeCopilot.Evaluation
                     Console.WriteLine($"Models to test: {_models.Length}");
                     Console.WriteLine($"Total evaluation combinations: {totalFiles * _models.Length}");
                     break;
-                    
+
                 case "info":
                     if (args.Length < 2)
                     {
@@ -682,7 +617,7 @@ namespace AwesomeCopilot.Evaluation
                         Console.WriteLine("Usage: dotnet run info <file-path>");
                         break;
                     }
-                    
+
                     var filePath = args[1];
                     var fileInfo = GetFileInfo(filePath);
                     if (fileInfo != null)
@@ -696,7 +631,7 @@ namespace AwesomeCopilot.Evaluation
                         Console.WriteLine($"Frontmatter: {JsonSerializer.Serialize(fileInfo.Frontmatter, new JsonSerializerOptions { WriteIndented = true })}");
                     }
                     break;
-                    
+
                 case "evaluate":
                     if (args.Length < 2)
                     {
@@ -704,37 +639,37 @@ namespace AwesomeCopilot.Evaluation
                         Console.WriteLine("Usage: dotnet run evaluate <file-path> [model]");
                         break;
                     }
-                    
+
                     var evaluateFilePath = args[1];
                     var evaluateModel = args.Length > 2 ? args[2] : null;
-                    
+
                     if (evaluateModel != null && !_models.Contains(evaluateModel))
                     {
                         Console.WriteLine($"Error: Unknown model '{evaluateModel}'");
                         Console.WriteLine($"Available models: {string.Join(", ", _models)}");
                         break;
                     }
-                    
+
                     Console.WriteLine($"Evaluating file: {evaluateFilePath}");
                     if (evaluateModel != null)
                         Console.WriteLine($"Using model: {evaluateModel}");
                     else
                         Console.WriteLine($"Using all models ({_models.Length} total)");
-                    
+
                     var evaluationResult = await EvaluateFile(evaluateFilePath, evaluateModel);
-                    
+
                     // Ensure output directory exists
                     Directory.CreateDirectory(_outputDir);
-                    
+
                     // Write results to file
                     var timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
                     var resultFile = Path.Combine(_outputDir, $"evaluation-result-{timestamp}.json");
                     var resultJson = JsonSerializer.Serialize(evaluationResult, new JsonSerializerOptions { WriteIndented = true });
                     await File.WriteAllTextAsync(resultFile, resultJson);
-                    
+
                     Console.WriteLine($"Evaluation completed. Results saved to: {resultFile}");
                     break;
-                    
+
                 case "test-connection":
                     Console.WriteLine("Testing GitHub Models connection...");
                     var connectionSuccessful = await TestGitHubModelsConnection();
@@ -748,13 +683,13 @@ namespace AwesomeCopilot.Evaluation
                         Console.WriteLine("Please check your GITHUB_TOKEN environment variable");
                     }
                     break;
-                    
+
                 default:
                     PrintHelp();
                     break;
             }
         }
-        
+
         private void PrintHelp()
         {
             Console.WriteLine("Awesome Copilot Evaluation Orchestrator - .NET Version");
@@ -790,13 +725,13 @@ namespace AwesomeCopilot.Evaluation
             Console.WriteLine("Available Models:");
             Console.WriteLine($"  {string.Join(", ", _models)}");
         }
-        
+
         public void Dispose()
         {
             _httpClient?.Dispose();
         }
     }
-    
+
     class Program
     {
         static async Task Main(string[] args)
