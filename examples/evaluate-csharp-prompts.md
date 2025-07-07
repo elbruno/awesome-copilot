@@ -7,7 +7,7 @@ This example demonstrates how to use the evaluation framework to compare C# deve
 First, let's see what C# related prompts we have:
 
 ```bash
-node scripts/evaluate.js discover | grep -i "csharp\|dotnet\|\.net"
+cd scripts && dotnet run discover | grep -i "csharp\|dotnet\|\.net"
 ```
 
 This will show us prompts like:
@@ -19,7 +19,7 @@ This will show us prompts like:
 ## Step 2: Create Evaluation Plan
 
 ```bash
-node scripts/evaluate.js plan
+cd scripts && dotnet run plan
 ```
 
 This generates a comprehensive evaluation plan in `evaluation-results/evaluation-plan.json`.
@@ -40,9 +40,9 @@ I want to evaluate C# development prompts against different models:
 
 2. Test against:
    - GPT-4.1-mini
-   - GPT-4o
    - Phi-4-mini-instruct
    - Meta-Llama-3.1-8B-Instruct
+   - Mistral-Nemo
 
 3. Focus on:
    - Code quality and best practices
@@ -71,7 +71,7 @@ Please evaluate the csharp-async.prompt.md file:
 Use the generated report template:
 
 ```bash
-node scripts/evaluate.js report
+cd scripts && dotnet run report
 ```
 
 Then fill in the results from your evaluation.
@@ -89,9 +89,9 @@ You should be able to determine:
 
 Based on typical evaluations, you might find:
 
-- **GPT-4o**: Highest code quality, best practices adherence
 - **GPT-4.1-mini**: Good balance of quality and cost
 - **Phi-4-mini-instruct**: Excellent compact model performance
 - **Meta-Llama-3.1-8B-Instruct**: Cost-effective alternative with solid performance
+- **Mistral-Nemo**: Strong performance for specific C# scenarios
 
 This data helps you make informed decisions about which model to use for different C# development scenarios.

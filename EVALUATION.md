@@ -19,40 +19,16 @@ A comprehensive prompt that defines the evaluation methodology, metrics, and rep
 ### 2. Prompt Evaluator Chatmode (`chatmodes/prompt-evaluator.chatmode.md`)
 A specialized chatmode for conducting structured evaluations. Switch to this mode when you need to evaluate specific prompts or run comparative analyses.
 
-### 3. Evaluation Orchestrator (`scripts/evaluate.js|py|cs`)
-A multi-language script suite that automates the discovery, planning, and reporting of evaluations across the repository. Available in JavaScript (Node.js), Python, and .NET versions.
-
-## Language Options
-
-The evaluation framework is available in multiple programming languages to accommodate different development environments:
-
-### JavaScript/Node.js (`evaluate.js`)
-```bash
-# Prerequisites: Node.js 16+ installed
-node scripts/evaluate.js <command>
-```
-
-### Python (`evaluate.py`)
-```bash
-# Prerequisites: Python 3.8+ installed
-python scripts/evaluate.py <command>
-```
-
-### .NET (`EvaluationOrchestrator.cs`)
-```bash
-# Prerequisites: .NET 8.0+ installed
-dotnet run --project scripts/EvaluationOrchestrator.csproj <command>
-```
-
-All implementations provide the same functionality:
+### 3. Evaluation Orchestrator (`scripts/EvaluationOrchestrator.cs`)
+A .NET application that automates the discovery, planning, and reporting of evaluations across the repository. The orchestrator provides:
 - Discover evaluation targets
 - Generate evaluation plans 
 - Create report templates
 - Show evaluation summaries
-- **NEW**: Get information about specific files
-- **NEW**: Evaluate individual files against one or all models
+- Get information about specific files
+- Evaluate individual files against one or all models
 - Test GitHub Models API connectivity
-- Support for the same GitHub Models
+- Support for GitHub Models
 
 ## Quick Start
 
@@ -88,13 +64,7 @@ GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 **Test the connection:**
 ```bash
-# JavaScript/Node.js
-node scripts/evaluate.js test-connection
-
-# Python
-python scripts/evaluate.py test-connection
-
-# .NET
+# Prerequisites: .NET 8.0+ installed
 cd scripts && dotnet run test-connection
 ```
 
@@ -102,9 +72,7 @@ cd scripts && dotnet run test-connection
 
 ```bash
 # Get a summary of what can be evaluated
-node scripts/evaluate.js summary          # JavaScript
-python scripts/evaluate.py summary        # Python  
-cd scripts && dotnet run summary          # .NET
+cd scripts && dotnet run summary
 ```
 
 Example output:
@@ -122,10 +90,9 @@ Total evaluation combinations: 268
 
 ```bash
 # Generate a detailed evaluation plan
-node scripts/evaluate.js plan             # JavaScript
-python scripts/evaluate.py plan           # Python
-cd scripts && dotnet run plan             # .NET
+cd scripts && dotnet run plan
 ```
+cd scripts && dotnet run plan
 
 This creates `evaluation-results/evaluation-plan.json` with a structured plan for testing all combinations.
 
@@ -133,9 +100,7 @@ This creates `evaluation-results/evaluation-plan.json` with a structured plan fo
 
 ```bash
 # Create a report template
-node scripts/evaluate.js report           # JavaScript
-python scripts/evaluate.py report         # Python
-cd scripts && dotnet run report           # .NET
+cd scripts && dotnet run report
 ```
 
 This creates `evaluation-results/evaluation-report.md` with a structured template for documenting results.
@@ -144,60 +109,49 @@ This creates `evaluation-results/evaluation-report.md` with a structured templat
 
 ### Available Commands
 
-All three implementations (JavaScript, Python, .NET) support the following commands:
+The .NET implementation supports the following commands:
 
 ```bash
 # Get evaluation summary
-<script> summary
+cd scripts && dotnet run summary
 
 # Discover all evaluation targets  
-<script> discover
+cd scripts && dotnet run discover
 
 # Generate evaluation plan
-<script> plan  
+cd scripts && dotnet run plan
 
 # Create report template
-<script> report
+cd scripts && dotnet run report
 
-# Get information about a specific file (NEW)
-<script> info <file-path>
+# Get information about a specific file
+cd scripts && dotnet run info <file-path>
 
-# Evaluate a specific file against all models (NEW)
-<script> evaluate <file-path>
+# Evaluate a specific file against all models
+cd scripts && dotnet run evaluate <file-path>
 
-# Evaluate a specific file against a specific model (NEW)
-<script> evaluate <file-path> <model-name>
+# Evaluate a specific file against a specific model
+cd scripts && dotnet run evaluate <file-path> <model-name>
 
 # Test GitHub Models API connection
-<script> test-connection
+cd scripts && dotnet run test-connection
 ```
 
-Where `<script>` is one of:
-- `node scripts/evaluate.js` (JavaScript)
-- `python scripts/evaluate.py` (Python)  
-- `dotnet run --project scripts/EvaluationOrchestrator.csproj` (.NET)
-
-### New Single-File Evaluation Commands
+### Single-File Evaluation Commands
 
 #### Get File Information
 ```bash
 # Example: Get information about a specific prompt
-node scripts/evaluate.js info ../prompts/csharp-async.prompt.md
-python scripts/evaluate.py info ../prompts/csharp-async.prompt.md
-dotnet run --project scripts/EvaluationOrchestrator.csproj info ../prompts/csharp-async.prompt.md
+cd scripts && dotnet run info ../prompts/csharp-async.prompt.md
 ```
 
 #### Evaluate Single File
 ```bash
 # Example: Evaluate against all models
-node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md
-python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md
-dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md
+cd scripts && dotnet run evaluate ../prompts/csharp-async.prompt.md
 
 # Example: Evaluate against specific model
-node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
-python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
-dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
+cd scripts && dotnet run evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
 ```
 
 ### Step 5: Conduct Evaluations
@@ -243,25 +197,19 @@ The framework supports evaluation against the following LLM models available thr
 
 ## Usage Examples
 
-### Example 1: Evaluate a Specific Prompt (NEW)
+### Example 1: Evaluate a Specific Prompt
 
-Using the evaluation orchestrator scripts to evaluate a single file:
+Using the evaluation orchestrator to evaluate a single file:
 
 ```bash
 # Get information about a specific file
-node scripts/evaluate.js info ../prompts/csharp-async.prompt.md
-python scripts/evaluate.py info ../prompts/csharp-async.prompt.md
-dotnet run --project scripts/EvaluationOrchestrator.csproj info ../prompts/csharp-async.prompt.md
+cd scripts && dotnet run info ../prompts/csharp-async.prompt.md
 
 # Evaluate a specific file against all models
-node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md
-python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md
-dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md
+cd scripts && dotnet run evaluate ../prompts/csharp-async.prompt.md
 
 # Evaluate a specific file against a specific model
-node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
-python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
-dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
+cd scripts && dotnet run evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
 ```
 
 ### Example 2: Using GitHub Copilot Chat

@@ -139,43 +139,29 @@ The repository includes a comprehensive evaluation framework for testing and com
 ```bash
 # Get evaluation summary
 export GITHUB_TOKEN="your_github_token_here"
-node scripts/evaluate.js summary                                    # JavaScript
-python scripts/evaluate.py summary                                  # Python
-dotnet run --project scripts/EvaluationOrchestrator.csproj summary  # .NET
+cd scripts && dotnet run summary
 
 # Generate evaluation plan
-node scripts/evaluate.js plan                                    # JavaScript
-python scripts/evaluate.py plan                                  # Python
-dotnet run --project scripts/EvaluationOrchestrator.csproj plan  # .NET
+cd scripts && dotnet run plan
 
 # Create report template
-node scripts/evaluate.js report                                    # JavaScript
-python scripts/evaluate.py report                                  # Python
-dotnet run --project scripts/EvaluationOrchestrator.csproj report  # .NET
+cd scripts && dotnet run report
 
-# NEW: Get information about a specific file
-node scripts/evaluate.js info ../prompts/csharp-async.prompt.md
-python scripts/evaluate.py info ../prompts/csharp-async.prompt.md
-dotnet run --project scripts/EvaluationOrchestrator.csproj info ../prompts/csharp-async.prompt.md
+# Get information about a specific file
+cd scripts && dotnet run info ../prompts/csharp-async.prompt.md
 
-# NEW: Evaluate a specific file against all models
-node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md
-python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md
-dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md
+# Evaluate a specific file against all models
+cd scripts && dotnet run evaluate ../prompts/csharp-async.prompt.md
 
-# NEW: Evaluate a specific file against a specific model
-node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
-python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
-dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
-```
-dotnet run --project scripts/EvaluationOrchestrator.csproj report  # .NET
+# Evaluate a specific file against a specific model
+cd scripts && dotnet run evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
 ```
 
 ### Evaluation Tools
 
 - **[Evaluate Prompts Against Models](prompts/evaluate-prompts-against-models.prompt.md)** - Systematic evaluation prompt for GitHub Models
 - **[Prompt Evaluator Chatmode](chatmodes/prompt-evaluator.chatmode.md)** - Specialized evaluation chatmode
-- **[Evaluation Scripts](scripts/)** - Automated evaluation orchestration (JavaScript, Python, .NET)
+- **[Evaluation Scripts](scripts/)** - Automated evaluation orchestration (.NET)
 
 For detailed usage instructions, see [EVALUATION.md](EVALUATION.md).
 
