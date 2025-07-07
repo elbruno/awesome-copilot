@@ -87,28 +87,28 @@ namespace AwesomeCopilot.Evaluation
 
         public class EvaluationTarget
         {
-            public string Filename { get; set; }
-            public string Path { get; set; }
-            public string Title { get; set; }
-            public string Description { get; set; }
-            public string Type { get; set; }
-            public Dictionary<string, object> Frontmatter { get; set; }
+            public string? Filename { get; set; }
+            public string? Path { get; set; }
+            public string? Title { get; set; }
+            public string? Description { get; set; }
+            public string? Type { get; set; }
+            public Dictionary<string, object>? Frontmatter { get; set; }
         }
 
         public class EvaluationPlan
         {
-            public Dictionary<string, object> Metadata { get; set; }
-            public List<EvaluationMatrix> EvaluationMatrix { get; set; }
-            public List<string> Recommendations { get; set; }
+            public Dictionary<string, object>? Metadata { get; set; }
+            public List<EvaluationMatrix>? EvaluationMatrix { get; set; }
+            public List<string>? Recommendations { get; set; }
         }
 
         public class EvaluationMatrix
         {
-            public EvaluationTarget Target { get; set; }
-            public string Model { get; set; }
-            public Dictionary<string, object> Metrics { get; set; }
-            public string Status { get; set; }
-            public List<string> TestCases { get; set; }
+            public EvaluationTarget? Target { get; set; }
+            public string? Model { get; set; }
+            public Dictionary<string, object>? Metrics { get; set; }
+            public string? Status { get; set; }
+            public List<string>? TestCases { get; set; }
         }
 
         private Dictionary<string, object> ExtractFrontmatter(string filePath)
@@ -515,15 +515,30 @@ namespace AwesomeCopilot.Evaluation
 
         public async Task<Dictionary<string, object>> EvaluateFile(string filePath, string model = null)
         {
+            return await EvaluateFile(filePath, model, null);
+        }
+
+        public async Task<Dictionary<string, object>> EvaluateFile(string filePath, string model, string evaluatorPromptPath)
+        {
             var target = GetFileInfo(filePath);
             if (target == null)
                 return new Dictionary<string, object> { { "error", "File not found or invalid" } };
 
             // Load the evaluation prompt template
-            var evalPromptPath = Path.Combine("..", "prompts", "evaluate-prompts-against-models.prompt.md");
-            if (!File.Exists(evalPromptPath))
-                return new Dictionary<string, object> { { "error", "Evaluation prompt template not found" } };
-            var evalPromptTemplate = File.ReadAllText(evalPromptPath);
+            string evalPromptTemplate = null;
+            if (!string.IsNullOrEmpty(evaluatorPromptPath))
+            {
+                if (!File.Exists(evaluatorPromptPath))
+                    return new Dictionary<string, object> { { "error", $"Evaluation prompt template not found: {evaluatorPromptPath}" } };
+                evalPromptTemplate = File.ReadAllText(evaluatorPromptPath);
+            }
+            else
+            {
+                var defaultPromptPath = Path.Combine("..", "prompts", "evaluate-prompts-against-models.prompt.md");
+                if (!File.Exists(defaultPromptPath))
+                    return new Dictionary<string, object> { { "error", "Evaluation prompt template not found" } };
+                evalPromptTemplate = File.ReadAllText(defaultPromptPath);
+            }
 
             var modelsToTest = model != null ? new[] { model } : _models;
             var results = new Dictionary<string, object>
@@ -544,7 +559,7 @@ namespace AwesomeCopilot.Evaluation
 
                 var evaluation = await RunEvaluation(filePath, testModel, testPrompt);
                 evaluation["model"] = testModel;
-                evaluation["target"] = target.Filename;
+                evaluation["target"] = target.Filename ?? string.Empty;
 
                 evaluations.Add(evaluation);
             }
@@ -560,9 +575,33 @@ namespace AwesomeCopilot.Evaluation
                 return;
             }
 
-            var command = args[0].ToLower();
+            // New argument parsing: --action, --file, --model, --evaluatorPrompt
+            string action = null;
+            string file = null;
+            string model = null;
+            string evaluatorPrompt = null;
 
-            switch (command)
+            foreach (var arg in args)
+            {
+                if (arg.StartsWith("--action="))
+                    action = arg.Substring("--action=".Length).ToLower();
+                else if (arg.StartsWith("--file="))
+                    file = arg.Substring("--file=".Length);
+                else if (arg.StartsWith("--model="))
+                    model = arg.Substring("--model=".Length);
+                else if (arg.StartsWith("--evaluatorPrompt="))
+                    evaluatorPrompt = arg.Substring("--evaluatorPrompt=".Length);
+            }
+
+            // Fallback to positional for backward compatibility
+            if (action == null && args.Length > 0)
+                action = args[0].ToLower();
+            if (file == null && args.Length > 1)
+                file = args[1];
+            if (model == null && args.Length > 2)
+                model = args[2];
+
+            switch (action)
             {
                 case "discover":
                     Console.WriteLine("Discovering evaluation targets...");
@@ -575,31 +614,21 @@ namespace AwesomeCopilot.Evaluation
                     Console.WriteLine("Generating evaluation plan...");
                     var planTargets = DiscoverEvaluationTargets();
                     var plan = GenerateEvaluationPlan(planTargets);
-
-                    // Ensure output directory exists
                     Directory.CreateDirectory(_outputDir);
-
-                    // Write plan to file
                     var planFile = Path.Combine(_outputDir, "evaluation-plan.json");
                     var planJson = JsonSerializer.Serialize(plan, new JsonSerializerOptions { WriteIndented = true });
                     await File.WriteAllTextAsync(planFile, planJson);
-
                     Console.WriteLine($"Evaluation plan generated: {planFile}");
-                    Console.WriteLine($"Total evaluations planned: {plan.EvaluationMatrix.Count}");
+                    Console.WriteLine($"Total evaluations planned: {plan.EvaluationMatrix?.Count ?? 0}");
                     break;
 
                 case "report":
                     Console.WriteLine("Creating evaluation report template...");
                     var reportTargets = DiscoverEvaluationTargets();
                     var report = CreateEvaluationReport(reportTargets);
-
-                    // Ensure output directory exists
                     Directory.CreateDirectory(_outputDir);
-
-                    // Write report to file
                     var reportFile = Path.Combine(_outputDir, "evaluation-report.md");
                     await File.WriteAllTextAsync(reportFile, report);
-
                     Console.WriteLine($"Evaluation report template created: {reportFile}");
                     break;
 
@@ -617,15 +646,13 @@ namespace AwesomeCopilot.Evaluation
                     break;
 
                 case "info":
-                    if (args.Length < 2)
+                    if (string.IsNullOrEmpty(file))
                     {
                         Console.WriteLine("Error: Please provide a file path");
-                        Console.WriteLine("Usage: dotnet run info <file-path>");
+                        Console.WriteLine("Usage: dotnet run --action=info --file=<file-path>");
                         break;
                     }
-
-                    var filePath = args[1];
-                    var fileInfo = GetFileInfo(filePath);
+                    var fileInfo = GetFileInfo(file);
                     if (fileInfo != null)
                     {
                         Console.WriteLine("\n=== FILE INFORMATION ===");
@@ -639,41 +666,48 @@ namespace AwesomeCopilot.Evaluation
                     break;
 
                 case "evaluate":
-                    if (args.Length < 2)
+                    if (string.IsNullOrEmpty(file))
                     {
                         Console.WriteLine("Error: Please provide a file path");
-                        Console.WriteLine("Usage: dotnet run evaluate <file-path> [model]");
+                        Console.WriteLine("Usage: dotnet run --action=evaluate --file=<file-path> [--model=<model>] [--evaluatorPrompt=<prompt-path>]");
                         break;
                     }
-
-                    var evaluateFilePath = args[1];
-                    var evaluateModel = args.Length > 2 ? args[2] : null;
-
-                    if (evaluateModel != null && !_models.Contains(evaluateModel))
+                    if (model != null && !_models.Contains(model))
                     {
-                        Console.WriteLine($"Error: Unknown model '{evaluateModel}'");
+                        Console.WriteLine($"Error: Unknown model '{model}'");
                         Console.WriteLine($"Available models: {string.Join(", ", _models)}");
                         break;
                     }
+                    // Evaluator prompt selection logic
+                    if (string.IsNullOrEmpty(evaluatorPrompt))
+                    {
+                        // Pick based on file type/location
+                        var type = "";
+                        if (file.EndsWith(".prompt.md")) type = "prompts";
+                        else if (file.EndsWith(".instructions.md")) type = "instructions";
+                        else if (file.EndsWith(".chatmode.md")) type = "chatmodes";
 
-                    Console.WriteLine($"Evaluating file: {evaluateFilePath}");
-                    if (evaluateModel != null)
-                        Console.WriteLine($"Using model: {evaluateModel}");
+                        if (type == "prompts" || type == "instructions")
+                            evaluatorPrompt = Path.Combine("..", "prompts", "evaluate-prompts-against-models.prompt.md");
+                        else if (type == "chatmodes")
+                            evaluatorPrompt = Path.Combine("..", "chatmodes", "prompt-evaluator.chatmode.md");
+                        else
+                            evaluatorPrompt = Path.Combine("..", "prompts", "evaluate-prompts-against-models.prompt.md");
+                    }
+
+                    Console.WriteLine($"Evaluating file: {file}");
+                    Console.WriteLine($"Using evaluator prompt: {evaluatorPrompt}");
+                    if (model != null)
+                        Console.WriteLine($"Using model: {model}");
                     else
                         Console.WriteLine($"Using all models ({_models.Length} total)");
 
-                    var evaluationResult = await EvaluateFile(evaluateFilePath, evaluateModel);
-
-                    // Ensure output directory exists
+                    var evaluationResult = await EvaluateFile(file, model, evaluatorPrompt);
                     Directory.CreateDirectory(_outputDir);
-
-                    // Write results to file
                     var timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
                     var resultFile = Path.Combine(_outputDir, $"evaluation-result-{timestamp}.json");
                     var resultJson = JsonSerializer.Serialize(evaluationResult, new JsonSerializerOptions { WriteIndented = true });
                     await File.WriteAllTextAsync(resultFile, resultJson);
-
-                    // Generate HTML report
                     var htmlReportFile = Path.Combine(_outputDir, $"evaluation-result-{timestamp}.html");
                     var htmlReport = GenerateHtmlReport(evaluationResult);
                     await File.WriteAllTextAsync(htmlReportFile, htmlReport);

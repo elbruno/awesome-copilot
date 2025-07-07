@@ -139,23 +139,37 @@ The repository includes a comprehensive evaluation framework for testing and com
 ```bash
 # Get evaluation summary
 export GITHUB_TOKEN="your_github_token_here"
-cd scripts && dotnet run summary
+cd scripts && dotnet run --action=summary
 
 # Generate evaluation plan
-cd scripts && dotnet run plan
+cd scripts && dotnet run --action=plan
 
 # Create report template
-cd scripts && dotnet run report
+cd scripts && dotnet run --action=report
 
 # Get information about a specific file
-cd scripts && dotnet run info ../prompts/csharp-async.prompt.md
+cd scripts && dotnet run --action=info --file=../prompts/csharp-async.prompt.md
 
-# Evaluate a specific file against all models
-cd scripts && dotnet run evaluate ../prompts/csharp-async.prompt.md
+# Evaluate a specific file against all models (default model: GPT-4.1-mini)
+cd scripts && dotnet run --action=evaluate --file=../prompts/csharp-async.prompt.md
 
 # Evaluate a specific file against a specific model
-cd scripts && dotnet run evaluate ../prompts/csharp-async.prompt.md GPT-4.1-mini
+cd scripts && dotnet run --action=evaluate --file=../prompts/csharp-async.prompt.md --model=GPT-4.1-mini
+
+# Evaluate a file with a custom evaluator prompt
+cd scripts && dotnet run --action=evaluate --file=../chatmodes/prompt-evaluator.chatmode.md --evaluatorPrompt=../chatmodes/prompt-evaluator.chatmode.md
 ```
+
+#### Argument Reference
+
+- `--action` (required): The action to perform. Supported: `discover`, `plan`, `report`, `summary`, `info`, `evaluate`, `test-connection`.
+- `--file`: The file or prompt to analyze (required for `info` and `evaluate`).
+- `--model`: The model to use (default: `GPT-4.1-mini`).
+- `--evaluatorPrompt`: Path to a custom evaluator prompt. If not provided, the script selects one based on the file type:
+  - For `.prompt.md` or `.instructions.md`: uses `prompts/evaluate-prompts-against-models.prompt.md`
+  - For `.chatmode.md`: uses `chatmodes/prompt-evaluator.chatmode.md`
+
+All arguments can also be provided positionally for backward compatibility, but the new `--action`, `--file`, `--model`, and `--evaluatorPrompt` flags are recommended for clarity.
 
 ### Evaluation Tools
 
