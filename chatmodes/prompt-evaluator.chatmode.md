@@ -43,19 +43,7 @@ For each prompt/instruction/chatmode, analyze:
 **Test Configuration:**
 ```yaml
 models:
-  - name: "GPT-4o-mini"
-    temperature: [0.1, 0.7, 1.0]
-    max_tokens: [2000, 4000, 8000]
-    top_p: [0.9, 0.95, 1.0]
-  - name: "GPT-4o"
-    temperature: [0.1, 0.7, 1.0]
-    max_tokens: [2000, 4000, 8000]
-    top_p: [0.9, 0.95, 1.0]
   - name: "GPT-4.1-mini"
-    temperature: [0.1, 0.7, 1.0]
-    max_tokens: [2000, 4000, 8000]
-    top_p: [0.9, 0.95, 1.0]
-  - name: "Phi-3-mini-128k-instruct"
     temperature: [0.1, 0.7, 1.0]
     max_tokens: [2000, 4000, 8000]
     top_p: [0.9, 0.95, 1.0]
@@ -67,7 +55,7 @@ models:
     temperature: [0.1, 0.7, 1.0]
     max_tokens: [2000, 4000, 8000]
     top_p: [0.9, 0.95, 1.0]
-  - name: "Meta-Llama-3.1-70B-Instruct"
+  - name: "Mistral-Nemo"
     temperature: [0.1, 0.7, 1.0]
     max_tokens: [2000, 4000, 8000]
     top_p: [0.9, 0.95, 1.0]
@@ -139,12 +127,10 @@ models:
 ### Model Performance Matrix
 | Model | Accuracy | Relevance | Completeness | Clarity | Consistency | Cost | Time |
 |-------|----------|-----------|--------------|---------|-------------|------|------|
-| GPT-4o-mini | 8.5/10 | 9.0/10 | 8.8/10 | 9.2/10 | 8.5/10 | $0.015 | 2.3s |
-| GPT-4o | 9.2/10 | 9.4/10 | 9.1/10 | 9.4/10 | 9.0/10 | $0.060 | 3.1s |
 | GPT-4.1-mini | 8.7/10 | 9.1/10 | 8.9/10 | 9.3/10 | 8.7/10 | $0.012 | 2.1s |
-| Phi-3-mini-128k-instruct | 8.0/10 | 8.5/10 | 8.0/10 | 8.8/10 | 8.2/10 | $0.005 | 1.8s |
 | Phi-4-mini-instruct | 8.2/10 | 8.7/10 | 8.2/10 | 9.0/10 | 8.4/10 | $0.006 | 1.9s |
 | Meta-Llama-3.1-8B-Instruct | 7.8/10 | 8.3/10 | 7.8/10 | 8.6/10 | 8.0/10 | $0.004 | 1.6s |
+| Mistral-Nemo | 8.0/10 | 8.5/10 | 8.0/10 | 8.8/10 | 8.2/10 | $0.005 | 1.8s |
 
 ### Test Scenario Results
 #### Standard Use Case

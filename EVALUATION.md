@@ -58,17 +58,33 @@ All implementations provide the same functionality:
 
 ### Step 1: Setup GitHub Token
 
-Set your GitHub personal access token to access GitHub Models:
+Set your GitHub personal access token to access GitHub Models. You can do this via environment variable or .env file:
 
-**Windows:**
+**Option 1: Environment Variable**
+
+*Windows:*
 ```cmd
 set GITHUB_TOKEN=your_github_token_here
 ```
 
-**Linux/macOS:**
+*Linux/macOS:*
 ```bash
 export GITHUB_TOKEN=your_github_token_here
 ```
+
+**Option 2: .env File (Recommended)**
+
+1. Copy the sample .env file:
+```bash
+cp scripts/.env.sample scripts/.env
+```
+
+2. Edit the `.env` file and replace `your_github_token_here` with your actual GitHub personal access token:
+```
+GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+3. Make sure to keep the `.env` file private and do not commit it to version control.
 
 **Test the connection:**
 ```bash
@@ -98,8 +114,8 @@ Total files: 67
 - Prompts: 36
 - Instructions: 22
 - Chatmodes: 9
-Models to test: 13
-Total evaluation combinations: 871
+Models to test: 4
+Total evaluation combinations: 268
 ```
 
 ### Step 3: Create Evaluation Plan
@@ -196,21 +212,12 @@ Use GitHub Copilot with the evaluation tools:
 
 ### Models Tested
 
-The framework supports evaluation against multiple LLM models available through GitHub Models:
+The framework supports evaluation against the following LLM models available through GitHub Models:
 
-- **GPT-4o-mini** - Cost-effective OpenAI model
-- **GPT-4o** - High-quality OpenAI model  
 - **GPT-4.1-mini** - Latest cost-effective OpenAI model
-- **Phi-3-mini-128k-instruct** - Microsoft compact model
-- **Phi-3-medium-128k-instruct** - Microsoft medium model
-- **Phi-4-mini-instruct** - Microsoft latest compact model
-- **Meta-Llama-3.1-8B-Instruct** - Meta compact model
-- **Meta-Llama-3.1-70B-Instruct** - Meta large model
-- **Meta-Llama-3.1-405B-Instruct** - Meta extra large model
-- **Mistral-large** - Mistral AI large model
-- **Mistral-Nemo** - Mistral AI compact model
-- **Cohere-command-r** - Cohere standard model
-- **Cohere-command-r-plus** - Cohere enhanced model
+- **Phi-4-mini-instruct** - Microsoft's newest compact model
+- **Meta-Llama-3.1-8B-Instruct** - Meta's compact model
+- **Mistral-Nemo** - Mistral AI's compact model
 
 ### Evaluation Metrics
 
@@ -296,9 +303,10 @@ Compare models on accuracy, consistency, and cost for code review scenarios.
 
 | Model | Accuracy | Relevance | Completeness | Clarity | Consistency | Cost | Time |
 |-------|----------|-----------|--------------|---------|-------------|------|------|
-| GPT-4o-mini | 8.5/10 | 9.0/10 | 8.8/10 | 9.2/10 | 8.5/10 | $0.015 | 2.3s |
-| GPT-4o | 9.2/10 | 9.4/10 | 9.1/10 | 9.4/10 | 9.0/10 | $0.060 | 3.1s |
-| Phi-3-mini-128k-instruct | 8.0/10 | 8.5/10 | 8.0/10 | 8.8/10 | 8.2/10 | $0.005 | 1.8s |
+| GPT-4.1-mini | 8.5/10 | 9.0/10 | 8.8/10 | 9.2/10 | 8.5/10 | $0.015 | 2.3s |
+| Phi-4-mini-instruct | 8.0/10 | 8.5/10 | 8.0/10 | 8.8/10 | 8.2/10 | $0.005 | 1.8s |
+| Meta-Llama-3.1-8B-Instruct | 8.2/10 | 8.7/10 | 8.3/10 | 8.6/10 | 8.4/10 | $0.008 | 2.0s |
+| Mistral-Nemo | 8.1/10 | 8.6/10 | 8.2/10 | 8.5/10 | 8.3/10 | $0.007 | 1.9s |
 
 ### Interpretation Guidelines
 

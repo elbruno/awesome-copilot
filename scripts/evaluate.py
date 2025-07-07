@@ -20,6 +20,24 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 import requests
 
+# Load environment variables from .env file if available
+def load_env_file():
+    """Load environment variables from .env file if it exists."""
+    env_path = Path(__file__).parent / '.env'
+    if env_path.exists():
+        with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, *value_parts = line.split('=')
+                    value = '='.join(value_parts).strip()
+                    # Only set if not already set in environment
+                    if key.strip() not in os.environ:
+                        os.environ[key.strip()] = value
+
+# Load .env file before other operations
+load_env_file()
+
 # Configuration
 CONFIG = {
     # Directories to scan for evaluation targets
@@ -41,19 +59,10 @@ CONFIG = {
     
     # GitHub Models to evaluate against
     'models': [
-        'gpt-4o-mini',
-        'gpt-4o',
         'GPT-4.1-mini',
-        'Phi-3-mini-128k-instruct',
-        'Phi-3-medium-128k-instruct',
         'Phi-4-mini-instruct',
         'Meta-Llama-3.1-8B-Instruct',
-        'Meta-Llama-3.1-70B-Instruct',
-        'Meta-Llama-3.1-405B-Instruct',
-        'Mistral-large',
-        'Mistral-Nemo',
-        'Cohere-command-r',
-        'Cohere-command-r-plus'
+        'Mistral-Nemo'
     ],
     
     # Evaluation metrics

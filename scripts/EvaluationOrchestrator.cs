@@ -43,19 +43,10 @@ namespace AwesomeCopilot.Evaluation
         private readonly string _outputDir = "evaluation-results";
         
         private readonly string[] _models = {
-            "gpt-4o-mini",
-            "gpt-4o",
             "GPT-4.1-mini",
-            "Phi-3-mini-128k-instruct",
-            "Phi-3-medium-128k-instruct",
             "Phi-4-mini-instruct",
             "Meta-Llama-3.1-8B-Instruct",
-            "Meta-Llama-3.1-70B-Instruct",
-            "Meta-Llama-3.1-405B-Instruct",
-            "Mistral-large",
-            "Mistral-Nemo",
-            "Cohere-command-r",
-            "Cohere-command-r-plus"
+            "Mistral-Nemo"
         };
         
         private readonly string[] _metrics = {
@@ -74,16 +65,46 @@ namespace AwesomeCopilot.Evaluation
         public EvaluationOrchestrator()
         {
             _httpClient = new HttpClient();
+            
+            // Try to load GitHub token from environment variable first
             _githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            
+            // If not found, try to load from .env file
+            if (string.IsNullOrEmpty(_githubToken))
+            {
+                _githubToken = LoadGitHubTokenFromEnvFile();
+            }
             
             if (string.IsNullOrEmpty(_githubToken))
             {
-                Console.WriteLine("Warning: GITHUB_TOKEN environment variable not set. GitHub Models API calls will fail.");
+                Console.WriteLine("Warning: GITHUB_TOKEN not found in environment variable or .env file. GitHub Models API calls will fail.");
             }
             else
             {
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_githubToken}");
             }
+        }
+        
+        private string LoadGitHubTokenFromEnvFile()
+        {
+            var envFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env");
+            if (File.Exists(envFilePath))
+            {
+                var lines = File.ReadAllLines(envFilePath);
+                foreach (var line in lines)
+                {
+                    var trimmedLine = line.Trim();
+                    if (!string.IsNullOrEmpty(trimmedLine) && !trimmedLine.StartsWith("#") && trimmedLine.Contains("="))
+                    {
+                        var parts = trimmedLine.Split('=', 2);
+                        if (parts.Length == 2 && parts[0].Trim() == "GITHUB_TOKEN")
+                        {
+                            return parts[1].Trim();
+                        }
+                    }
+                }
+            }
+            return null;
         }
         
         public class EvaluationTarget

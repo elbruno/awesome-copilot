@@ -14,6 +14,28 @@
 const fs = require('fs');
 const path = require('path');
 
+// Load environment variables from .env file if available
+function loadEnvFile() {
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    envContent.split('\n').forEach(line => {
+      line = line.trim();
+      if (line && !line.startsWith('#') && line.includes('=')) {
+        const [key, ...valueParts] = line.split('=');
+        const value = valueParts.join('=').trim();
+        // Only set if not already set in environment
+        if (!process.env[key.trim()]) {
+          process.env[key.trim()] = value;
+        }
+      }
+    });
+  }
+}
+
+// Load .env file before other operations
+loadEnvFile();
+
 // Configuration
 const CONFIG = {
   // Directories to scan for evaluation targets
@@ -35,19 +57,10 @@ const CONFIG = {
   
   // GitHub Models to evaluate against
   models: [
-    'gpt-4o-mini',
-    'gpt-4o',
     'GPT-4.1-mini',
-    'Phi-3-mini-128k-instruct',
-    'Phi-3-medium-128k-instruct',
     'Phi-4-mini-instruct',
     'Meta-Llama-3.1-8B-Instruct',
-    'Meta-Llama-3.1-70B-Instruct',
-    'Meta-Llama-3.1-405B-Instruct',
-    'Mistral-large',
-    'Mistral-Nemo',
-    'Cohere-command-r',
-    'Cohere-command-r-plus'
+    'Mistral-Nemo'
   ],
   
   // Evaluation metrics
