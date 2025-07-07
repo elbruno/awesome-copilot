@@ -28,9 +28,9 @@ namespace AwesomeCopilot.Evaluation
         // Configuration
         private readonly Dictionary<string, string> _directories = new()
         {
-            { "prompts", "prompts" },
-            { "instructions", "instructions" },
-            { "chatmodes", "chatmodes" }
+            { "prompts", "../prompts" },
+            { "instructions", "../instructions" },
+            { "chatmodes", "../chatmodes" }
         };
         
         private readonly Dictionary<string, string> _extensions = new()
@@ -522,6 +522,71 @@ namespace AwesomeCopilot.Evaluation
             }
         }
         
+        public EvaluationTarget GetFileInfo(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                Console.WriteLine($"Error: File not found: {filePath}");
+                return null;
+            }
+
+            var frontmatter = ExtractFrontmatter(filePath);
+            var title = ExtractTitle(filePath);
+            var filename = Path.GetFileName(filePath);
+            
+            // Determine file type based on extension
+            string type = "unknown";
+            if (filename.EndsWith(".prompt.md"))
+                type = "prompts";
+            else if (filename.EndsWith(".instructions.md"))
+                type = "instructions";
+            else if (filename.EndsWith(".chatmode.md"))
+                type = "chatmodes";
+
+            return new EvaluationTarget
+            {
+                Filename = filename,
+                Path = filePath,
+                Title = title,
+                Description = frontmatter.ContainsKey("description") ? frontmatter["description"].ToString() : "No description available",
+                Type = type,
+                Frontmatter = frontmatter
+            };
+        }
+
+        public async Task<Dictionary<string, object>> EvaluateFile(string filePath, string model = null)
+        {
+            var target = GetFileInfo(filePath);
+            if (target == null)
+                return new Dictionary<string, object> { { "error", "File not found or invalid" } };
+
+            var modelsToTest = model != null ? new[] { model } : _models;
+            var results = new Dictionary<string, object>
+            {
+                { "file", target },
+                { "evaluations", new List<Dictionary<string, object>>() }
+            };
+
+            var evaluations = (List<Dictionary<string, object>>)results["evaluations"];
+
+            foreach (var testModel in modelsToTest)
+            {
+                Console.WriteLine($"Evaluating {target.Filename} with model {testModel}...");
+                
+                // Create a basic test prompt based on the file content
+                var fileContent = File.ReadAllText(filePath);
+                var testPrompt = $"Please evaluate this {target.Type.TrimEnd('s')} content:\n\n{fileContent}\n\nProvide a brief assessment of its quality and effectiveness.";
+                
+                var evaluation = await RunEvaluation(filePath, testModel, testPrompt);
+                evaluation["model"] = testModel;
+                evaluation["target"] = target.Filename;
+                
+                evaluations.Add(evaluation);
+            }
+
+            return results;
+        }
+
         public async Task Main(string[] args)
         {
             if (args.Length == 0)
@@ -586,6 +651,66 @@ namespace AwesomeCopilot.Evaluation
                     Console.WriteLine($"Total evaluation combinations: {totalFiles * _models.Length}");
                     break;
                     
+                case "info":
+                    if (args.Length < 2)
+                    {
+                        Console.WriteLine("Error: Please provide a file path");
+                        Console.WriteLine("Usage: dotnet run info <file-path>");
+                        break;
+                    }
+                    
+                    var filePath = args[1];
+                    var fileInfo = GetFileInfo(filePath);
+                    if (fileInfo != null)
+                    {
+                        Console.WriteLine("\n=== FILE INFORMATION ===");
+                        Console.WriteLine($"File: {fileInfo.Filename}");
+                        Console.WriteLine($"Path: {fileInfo.Path}");
+                        Console.WriteLine($"Title: {fileInfo.Title}");
+                        Console.WriteLine($"Description: {fileInfo.Description}");
+                        Console.WriteLine($"Type: {fileInfo.Type}");
+                        Console.WriteLine($"Frontmatter: {JsonSerializer.Serialize(fileInfo.Frontmatter, new JsonSerializerOptions { WriteIndented = true })}");
+                    }
+                    break;
+                    
+                case "evaluate":
+                    if (args.Length < 2)
+                    {
+                        Console.WriteLine("Error: Please provide a file path");
+                        Console.WriteLine("Usage: dotnet run evaluate <file-path> [model]");
+                        break;
+                    }
+                    
+                    var evaluateFilePath = args[1];
+                    var evaluateModel = args.Length > 2 ? args[2] : null;
+                    
+                    if (evaluateModel != null && !_models.Contains(evaluateModel))
+                    {
+                        Console.WriteLine($"Error: Unknown model '{evaluateModel}'");
+                        Console.WriteLine($"Available models: {string.Join(", ", _models)}");
+                        break;
+                    }
+                    
+                    Console.WriteLine($"Evaluating file: {evaluateFilePath}");
+                    if (evaluateModel != null)
+                        Console.WriteLine($"Using model: {evaluateModel}");
+                    else
+                        Console.WriteLine($"Using all models ({_models.Length} total)");
+                    
+                    var evaluationResult = await EvaluateFile(evaluateFilePath, evaluateModel);
+                    
+                    // Ensure output directory exists
+                    Directory.CreateDirectory(_outputDir);
+                    
+                    // Write results to file
+                    var timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
+                    var resultFile = Path.Combine(_outputDir, $"evaluation-result-{timestamp}.json");
+                    var resultJson = JsonSerializer.Serialize(evaluationResult, new JsonSerializerOptions { WriteIndented = true });
+                    await File.WriteAllTextAsync(resultFile, resultJson);
+                    
+                    Console.WriteLine($"Evaluation completed. Results saved to: {resultFile}");
+                    break;
+                    
                 case "test-connection":
                     Console.WriteLine("Testing GitHub Models connection...");
                     var connectionSuccessful = await TestGitHubModelsConnection();
@@ -610,23 +735,36 @@ namespace AwesomeCopilot.Evaluation
         {
             Console.WriteLine("Awesome Copilot Evaluation Orchestrator - .NET Version");
             Console.WriteLine();
-            Console.WriteLine("Usage: dotnet run <command>");
+            Console.WriteLine("Usage: dotnet run <command> [arguments]");
             Console.WriteLine();
             Console.WriteLine("Commands:");
-            Console.WriteLine("  discover         - Discover all evaluation targets");
-            Console.WriteLine("  plan             - Generate evaluation plan");
-            Console.WriteLine("  report           - Create evaluation report template");
-            Console.WriteLine("  summary          - Show evaluation summary");
-            Console.WriteLine("  test-connection  - Test GitHub Models API connection");
+            Console.WriteLine("  discover              - Discover all evaluation targets");
+            Console.WriteLine("  plan                  - Generate evaluation plan");
+            Console.WriteLine("  report                - Create evaluation report template");
+            Console.WriteLine("  summary               - Show evaluation summary");
+            Console.WriteLine("  info <file-path>      - Show information about a specific file");
+            Console.WriteLine("  evaluate <file-path> [model] - Evaluate a specific file against one or all models");
+            Console.WriteLine("  test-connection       - Test GitHub Models API connection");
+            Console.WriteLine();
+            Console.WriteLine("Arguments:");
+            Console.WriteLine("  <file-path>           - Path to the file to evaluate (e.g., '../prompts/csharp-async.prompt.md')");
+            Console.WriteLine("  [model]               - Optional specific model to use (e.g., 'gpt-4o-mini')");
             Console.WriteLine();
             Console.WriteLine("Environment Variables:");
-            Console.WriteLine("  GITHUB_TOKEN     - GitHub personal access token for GitHub Models API");
+            Console.WriteLine("  GITHUB_TOKEN          - GitHub personal access token for GitHub Models API");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine("  dotnet run discover");
             Console.WriteLine("  dotnet run plan");
             Console.WriteLine("  dotnet run report");
+            Console.WriteLine("  dotnet run summary");
+            Console.WriteLine("  dotnet run info ../prompts/csharp-async.prompt.md");
+            Console.WriteLine("  dotnet run evaluate ../prompts/csharp-async.prompt.md");
+            Console.WriteLine("  dotnet run evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini");
             Console.WriteLine("  dotnet run test-connection");
+            Console.WriteLine();
+            Console.WriteLine("Available Models:");
+            Console.WriteLine($"  {string.Join(", ", _models)}");
         }
         
         public void Dispose()

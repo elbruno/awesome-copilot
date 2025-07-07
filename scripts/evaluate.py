@@ -24,9 +24,9 @@ import requests
 CONFIG = {
     # Directories to scan for evaluation targets
     'directories': {
-        'prompts': 'prompts',
-        'instructions': 'instructions',
-        'chatmodes': 'chatmodes'
+        'prompts': '../prompts',
+        'instructions': '../instructions',
+        'chatmodes': '../chatmodes'
     },
     
     # File extensions to include
@@ -437,6 +437,66 @@ This report presents the evaluation results for prompts, instructions, and chatm
                 'error': str(e)
             }
     
+    def get_file_info(self, file_path: str) -> Optional[Dict[str, Any]]:
+        """Get information about a specific file."""
+        def operation():
+            if not os.path.exists(file_path):
+                print(f"Error: File not found: {file_path}")
+                return None
+            
+            frontmatter = self.extract_frontmatter(file_path)
+            title = self.extract_title(file_path)
+            filename = os.path.basename(file_path)
+            
+            # Determine file type based on extension
+            file_type = "unknown"
+            if filename.endswith('.prompt.md'):
+                file_type = "prompts"
+            elif filename.endswith('.instructions.md'):
+                file_type = "instructions"
+            elif filename.endswith('.chatmode.md'):
+                file_type = "chatmodes"
+            
+            return {
+                'filename': filename,
+                'path': file_path,
+                'title': title,
+                'description': frontmatter.get('description', 'No description available'),
+                'type': file_type,
+                'frontmatter': frontmatter
+            }
+        
+        return self.safe_file_operation(operation, f"Failed to get file info for {file_path}")
+    
+    def evaluate_file(self, file_path: str, model: str = None) -> Dict[str, Any]:
+        """Evaluate a specific file against one or all models."""
+        target = self.get_file_info(file_path)
+        if not target:
+            return {'error': 'File not found or invalid'}
+        
+        models_to_test = [model] if model else CONFIG['models']
+        results = {
+            'file': target,
+            'evaluations': []
+        }
+        
+        for test_model in models_to_test:
+            print(f"Evaluating {target['filename']} with model {test_model}...")
+            
+            # Create a basic test prompt based on the file content
+            with open(file_path, 'r', encoding='utf-8') as f:
+                file_content = f.read()
+            
+            test_prompt = f"Please evaluate this {target['type'].rstrip('s')} content:\n\n{file_content}\n\nProvide a brief assessment of its quality and effectiveness."
+            
+            evaluation = self.run_evaluation(file_path, test_model, test_prompt)
+            evaluation['model'] = test_model
+            evaluation['target'] = target['filename']
+            
+            results['evaluations'].append(evaluation)
+        
+        return results
+
     def main(self):
         """Main execution function."""
         if len(sys.argv) < 2:
@@ -503,6 +563,57 @@ This report presents the evaluation results for prompts, instructions, and chatm
                 print('✗ GitHub Models connection failed')
                 print('Please check your GITHUB_TOKEN environment variable')
         
+        elif command == 'info':
+            if len(sys.argv) < 3:
+                print('Error: Please provide a file path')
+                print('Usage: python evaluate.py info <file-path>')
+                return
+            
+            file_path = sys.argv[2]
+            file_info = self.get_file_info(file_path)
+            if file_info:
+                print('\n=== FILE INFORMATION ===')
+                print(f"File: {file_info['filename']}")
+                print(f"Path: {file_info['path']}")
+                print(f"Title: {file_info['title']}")
+                print(f"Description: {file_info['description']}")
+                print(f"Type: {file_info['type']}")
+                print(f"Frontmatter: {json.dumps(file_info['frontmatter'], indent=2)}")
+        
+        elif command == 'evaluate':
+            if len(sys.argv) < 3:
+                print('Error: Please provide a file path')
+                print('Usage: python evaluate.py evaluate <file-path> [model]')
+                return
+            
+            file_path = sys.argv[2]
+            model = sys.argv[3] if len(sys.argv) > 3 else None
+            
+            if model and model not in CONFIG['models']:
+                print(f"Error: Unknown model '{model}'")
+                print(f"Available models: {', '.join(CONFIG['models'])}")
+                return
+            
+            print(f"Evaluating file: {file_path}")
+            if model:
+                print(f"Using model: {model}")
+            else:
+                print(f"Using all models ({len(CONFIG['models'])} total)")
+            
+            evaluation_result = self.evaluate_file(file_path, model)
+            
+            # Ensure output directory exists
+            output_dir = Path(CONFIG['output_dir'])
+            output_dir.mkdir(exist_ok=True)
+            
+            # Write results to file
+            timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+            result_file = output_dir / f'evaluation-result-{timestamp}.json'
+            with open(result_file, 'w') as f:
+                json.dump(evaluation_result, f, indent=2)
+            
+            print(f"Evaluation completed. Results saved to: {result_file}")
+        
         else:
             self.print_help()
     
@@ -510,23 +621,36 @@ This report presents the evaluation results for prompts, instructions, and chatm
         """Print help information."""
         print('Awesome Copilot Evaluation Orchestrator - Python Version')
         print('')
-        print('Usage: python evaluate.py <command>')
+        print('Usage: python evaluate.py <command> [arguments]')
         print('')
         print('Commands:')
-        print('  discover         - Discover all evaluation targets')
-        print('  plan             - Generate evaluation plan')
-        print('  report           - Create evaluation report template')
-        print('  summary          - Show evaluation summary')
-        print('  test-connection  - Test GitHub Models API connection')
+        print('  discover              - Discover all evaluation targets')
+        print('  plan                  - Generate evaluation plan')
+        print('  report                - Create evaluation report template')
+        print('  summary               - Show evaluation summary')
+        print('  info <file-path>      - Show information about a specific file')
+        print('  evaluate <file-path> [model] - Evaluate a specific file against one or all models')
+        print('  test-connection       - Test GitHub Models API connection')
+        print('')
+        print('Arguments:')
+        print('  <file-path>           - Path to the file to evaluate (e.g., \'../prompts/csharp-async.prompt.md\')')
+        print('  [model]               - Optional specific model to use (e.g., \'gpt-4o-mini\')')
         print('')
         print('Environment Variables:')
-        print('  GITHUB_TOKEN     - GitHub personal access token for GitHub Models API')
+        print('  GITHUB_TOKEN          - GitHub personal access token for GitHub Models API')
         print('')
         print('Examples:')
         print('  python evaluate.py discover')
         print('  python evaluate.py plan')
         print('  python evaluate.py report')
+        print('  python evaluate.py summary')
+        print('  python evaluate.py info ../prompts/csharp-async.prompt.md')
+        print('  python evaluate.py evaluate ../prompts/csharp-async.prompt.md')
+        print('  python evaluate.py evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini')
         print('  python evaluate.py test-connection')
+        print('')
+        print('Available Models:')
+        print(f'  {", ".join(CONFIG["models"])}')
 
 
 if __name__ == '__main__':

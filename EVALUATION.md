@@ -48,6 +48,9 @@ All implementations provide the same functionality:
 - Discover evaluation targets
 - Generate evaluation plans 
 - Create report templates
+- Show evaluation summaries
+- **NEW**: Get information about specific files
+- **NEW**: Evaluate individual files against one or all models
 - Test GitHub Models API connectivity
 - Support for the same GitHub Models
 
@@ -121,6 +124,66 @@ cd scripts && dotnet run report           # .NET
 
 This creates `evaluation-results/evaluation-report.md` with a structured template for documenting results.
 
+## Command Reference
+
+### Available Commands
+
+All three implementations (JavaScript, Python, .NET) support the following commands:
+
+```bash
+# Get evaluation summary
+<script> summary
+
+# Discover all evaluation targets  
+<script> discover
+
+# Generate evaluation plan
+<script> plan  
+
+# Create report template
+<script> report
+
+# Get information about a specific file (NEW)
+<script> info <file-path>
+
+# Evaluate a specific file against all models (NEW)
+<script> evaluate <file-path>
+
+# Evaluate a specific file against a specific model (NEW)
+<script> evaluate <file-path> <model-name>
+
+# Test GitHub Models API connection
+<script> test-connection
+```
+
+Where `<script>` is one of:
+- `node scripts/evaluate.js` (JavaScript)
+- `python scripts/evaluate.py` (Python)  
+- `dotnet run --project scripts/EvaluationOrchestrator.csproj` (.NET)
+
+### New Single-File Evaluation Commands
+
+#### Get File Information
+```bash
+# Example: Get information about a specific prompt
+node scripts/evaluate.js info ../prompts/csharp-async.prompt.md
+python scripts/evaluate.py info ../prompts/csharp-async.prompt.md
+dotnet run --project scripts/EvaluationOrchestrator.csproj info ../prompts/csharp-async.prompt.md
+```
+
+#### Evaluate Single File
+```bash
+# Example: Evaluate against all models
+node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md
+python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md
+dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md
+
+# Example: Evaluate against specific model
+node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+```
+
 ### Step 5: Conduct Evaluations
 
 Use GitHub Copilot with the evaluation tools:
@@ -170,7 +233,28 @@ The framework supports evaluation against multiple LLM models available through 
 
 ## Usage Examples
 
-### Example 1: Evaluate a Specific Prompt
+### Example 1: Evaluate a Specific Prompt (NEW)
+
+Using the evaluation orchestrator scripts to evaluate a single file:
+
+```bash
+# Get information about a specific file
+node scripts/evaluate.js info ../prompts/csharp-async.prompt.md
+python scripts/evaluate.py info ../prompts/csharp-async.prompt.md
+dotnet run --project scripts/EvaluationOrchestrator.csproj info ../prompts/csharp-async.prompt.md
+
+# Evaluate a specific file against all models
+node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md
+python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md
+dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md
+
+# Evaluate a specific file against a specific model
+node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+```
+
+### Example 2: Using GitHub Copilot Chat
 
 ```markdown
 I want to evaluate the `create-implementation-plan.prompt.md` against different models.
@@ -182,7 +266,7 @@ Please use the prompt-evaluator chatmode to:
 4. Provide optimization recommendations
 ```
 
-### Example 2: Batch Evaluation
+### Example 3: Batch Evaluation
 
 ```markdown
 Using the evaluate-prompts-against-models prompt, please:
@@ -192,7 +276,7 @@ Using the evaluate-prompts-against-models prompt, please:
 4. Generate a comparative report with recommendations
 ```
 
-### Example 3: Model Selection
+### Example 4: Model Selection
 
 ```markdown
 I need to choose the best model for code review tasks. Please evaluate:

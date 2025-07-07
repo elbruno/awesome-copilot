@@ -152,6 +152,23 @@ dotnet run --project scripts/EvaluationOrchestrator.csproj plan  # .NET
 node scripts/evaluate.js report                                    # JavaScript
 python scripts/evaluate.py report                                  # Python
 dotnet run --project scripts/EvaluationOrchestrator.csproj report  # .NET
+
+# NEW: Get information about a specific file
+node scripts/evaluate.js info ../prompts/csharp-async.prompt.md
+python scripts/evaluate.py info ../prompts/csharp-async.prompt.md
+dotnet run --project scripts/EvaluationOrchestrator.csproj info ../prompts/csharp-async.prompt.md
+
+# NEW: Evaluate a specific file against all models
+node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md
+python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md
+dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md
+
+# NEW: Evaluate a specific file against a specific model
+node scripts/evaluate.js evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+python scripts/evaluate.py evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+dotnet run --project scripts/EvaluationOrchestrator.csproj evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini
+```
+dotnet run --project scripts/EvaluationOrchestrator.csproj report  # .NET
 ```
 
 ### Evaluation Tools

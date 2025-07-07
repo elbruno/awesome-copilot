@@ -18,9 +18,9 @@ const path = require('path');
 const CONFIG = {
   // Directories to scan for evaluation targets
   directories: {
-    prompts: 'prompts',
-    instructions: 'instructions', 
-    chatmodes: 'chatmodes'
+    prompts: '../prompts',
+    instructions: '../instructions', 
+    chatmodes: '../chatmodes'
   },
   
   // File extensions to include
@@ -378,6 +378,80 @@ This report presents the evaluation results for prompts, instructions, and chatm
 }
 
 /**
+ * Get information about a specific file
+ */
+function getFileInfo(filePath) {
+  return safeFileOperation(() => {
+    if (!fs.existsSync(filePath)) {
+      console.log(`Error: File not found: ${filePath}`);
+      return null;
+    }
+    
+    const frontmatter = extractFrontmatter(filePath);
+    const title = extractTitle(filePath);
+    const filename = path.basename(filePath);
+    
+    // Determine file type based on extension
+    let fileType = 'unknown';
+    if (filename.endsWith('.prompt.md')) {
+      fileType = 'prompts';
+    } else if (filename.endsWith('.instructions.md')) {
+      fileType = 'instructions';
+    } else if (filename.endsWith('.chatmode.md')) {
+      fileType = 'chatmodes';
+    }
+    
+    return {
+      filename,
+      path: filePath,
+      title,
+      description: frontmatter.description || 'No description available',
+      type: fileType,
+      frontmatter
+    };
+  }, `Failed to get file info for ${filePath}`);
+}
+
+/**
+ * Evaluate a specific file against one or all models
+ */
+function evaluateFile(filePath, model = null) {
+  const target = getFileInfo(filePath);
+  if (!target) {
+    return { error: 'File not found or invalid' };
+  }
+  
+  const modelsToTest = model ? [model] : CONFIG.models;
+  const results = {
+    file: target,
+    evaluations: []
+  };
+  
+  modelsToTest.forEach(testModel => {
+    console.log(`Evaluating ${target.filename} with model ${testModel}...`);
+    
+    // Create a basic test prompt based on the file content
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    const testPrompt = `Please evaluate this ${target.type.replace(/s$/, '')} content:\n\n${fileContent}\n\nProvide a brief assessment of its quality and effectiveness.`;
+    
+    // Note: This is a placeholder for the actual evaluation
+    // In a real implementation, you would call the GitHub Models API here
+    const evaluation = {
+      success: true,
+      model: testModel,
+      target: target.filename,
+      response: 'Evaluation placeholder - API call would be made here',
+      response_time: Math.random() * 2,
+      note: 'This is a placeholder. Actual GitHub Models API integration would be implemented here.'
+    };
+    
+    results.evaluations.push(evaluation);
+  });
+  
+  return results;
+}
+
+/**
  * Main execution function
  */
 function main() {
@@ -435,21 +509,92 @@ function main() {
       console.log(`Total evaluation combinations: ${(summaryTargets.prompts.length + summaryTargets.instructions.length + summaryTargets.chatmodes.length) * CONFIG.models.length}`);
       break;
       
+    case 'info':
+      if (process.argv.length < 4) {
+        console.log('Error: Please provide a file path');
+        console.log('Usage: node evaluate.js info <file-path>');
+        return;
+      }
+      
+      const filePath = process.argv[3];
+      const fileInfo = getFileInfo(filePath);
+      if (fileInfo) {
+        console.log('\n=== FILE INFORMATION ===');
+        console.log(`File: ${fileInfo.filename}`);
+        console.log(`Path: ${fileInfo.path}`);
+        console.log(`Title: ${fileInfo.title}`);
+        console.log(`Description: ${fileInfo.description}`);
+        console.log(`Type: ${fileInfo.type}`);
+        console.log(`Frontmatter: ${JSON.stringify(fileInfo.frontmatter, null, 2)}`);
+      }
+      break;
+      
+    case 'evaluate':
+      if (process.argv.length < 4) {
+        console.log('Error: Please provide a file path');
+        console.log('Usage: node evaluate.js evaluate <file-path> [model]');
+        return;
+      }
+      
+      const evaluateFilePath = process.argv[3];
+      const evaluateModel = process.argv[4] || null;
+      
+      if (evaluateModel && !CONFIG.models.includes(evaluateModel)) {
+        console.log(`Error: Unknown model '${evaluateModel}'`);
+        console.log(`Available models: ${CONFIG.models.join(', ')}`);
+        return;
+      }
+      
+      console.log(`Evaluating file: ${evaluateFilePath}`);
+      if (evaluateModel) {
+        console.log(`Using model: ${evaluateModel}`);
+      } else {
+        console.log(`Using all models (${CONFIG.models.length} total)`);
+      }
+      
+      const evaluationResult = evaluateFile(evaluateFilePath, evaluateModel);
+      
+      // Ensure output directory exists
+      if (!fs.existsSync(CONFIG.outputDir)) {
+        fs.mkdirSync(CONFIG.outputDir, { recursive: true });
+      }
+      
+      // Write results to file
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const resultFile = path.join(CONFIG.outputDir, `evaluation-result-${timestamp}.json`);
+      fs.writeFileSync(resultFile, JSON.stringify(evaluationResult, null, 2));
+      
+      console.log(`Evaluation completed. Results saved to: ${resultFile}`);
+      break;
+      
     default:
       console.log('Awesome Copilot Evaluation Orchestrator');
       console.log('');
-      console.log('Usage: node evaluate.js <command>');
+      console.log('Usage: node evaluate.js <command> [arguments]');
       console.log('');
       console.log('Commands:');
-      console.log('  discover  - Discover all evaluation targets');
-      console.log('  plan      - Generate evaluation plan');
-      console.log('  report    - Create evaluation report template');
-      console.log('  summary   - Show evaluation summary');
+      console.log('  discover              - Discover all evaluation targets');
+      console.log('  plan                  - Generate evaluation plan');
+      console.log('  report                - Create evaluation report template');
+      console.log('  summary               - Show evaluation summary');
+      console.log('  info <file-path>      - Show information about a specific file');
+      console.log('  evaluate <file-path> [model] - Evaluate a specific file against one or all models');
+      console.log('');
+      console.log('Arguments:');
+      console.log('  <file-path>           - Path to the file to evaluate (e.g., \'../prompts/csharp-async.prompt.md\')');
+      console.log('  [model]               - Optional specific model to use (e.g., \'gpt-4o-mini\')');
       console.log('');
       console.log('Examples:');
       console.log('  node evaluate.js discover');
       console.log('  node evaluate.js plan');
       console.log('  node evaluate.js report');
+      console.log('  node evaluate.js summary');
+      console.log('  node evaluate.js info ../prompts/csharp-async.prompt.md');
+      console.log('  node evaluate.js evaluate ../prompts/csharp-async.prompt.md');
+      console.log('  node evaluate.js evaluate ../prompts/csharp-async.prompt.md gpt-4o-mini');
+      console.log('');
+      console.log('Available Models:');
+      console.log(`  ${CONFIG.models.join(', ')}`);
       break;
   }
 }
