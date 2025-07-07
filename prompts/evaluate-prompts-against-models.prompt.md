@@ -1,7 +1,7 @@
 ---
 mode: 'agent'
 tools: ['changes', 'codebase', 'editFiles', 'problems', 'runCommands']
-description: 'Evaluate and compare the effectiveness of prompts, instructions, and chatmodes against different LLM models like GPT-4.1-mini, GPT-4, Claude, etc.'
+description: 'Evaluate and compare the effectiveness of prompts, instructions, and chatmodes against different LLM models using GitHub Models API with your GitHub token.'
 ---
 
 # Evaluate Prompts Against Models
@@ -34,11 +34,16 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 ### 2. Model Testing Configuration
 
 **Target Models:**
-- GPT-4.1-mini (latest cost-effective model)
-- GPT-4 (standard reference model)
-- GPT-4 Turbo (performance comparison)
-- Claude-3.5-Sonnet (Anthropic comparison)
-- Gemini Pro (Google comparison)
+- GPT-4o-mini (latest cost-effective model)
+- GPT-4o (standard reference model)
+- Phi-3-mini-128k-instruct (Microsoft small model)
+- Phi-3-medium-128k-instruct (Microsoft medium model)
+- Meta-Llama-3.1-70B-Instruct (Meta large model)
+- Meta-Llama-3.1-405B-Instruct (Meta extra large model)
+- Mistral-large (Mistral AI large model)
+- Mistral-Nemo (Mistral AI compact model)
+- Cohere-command-r (Cohere standard model)
+- Cohere-command-r-plus (Cohere enhanced model)
 
 **Test Parameters:**
 - Temperature: 0.1 (consistent), 0.7 (creative), 1.0 (diverse)
@@ -151,9 +156,9 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 ### Model Performance Comparison
 | Model | Accuracy | Relevance | Completeness | Clarity | Consistency | Avg Cost | Avg Time |
 |-------|----------|-----------|--------------|---------|-------------|----------|----------|
-| GPT-4.1-mini | 85% | 90% | 88% | 92% | 85% | $0.015 | 2.3s |
-| GPT-4 | 92% | 94% | 91% | 94% | 90% | $0.060 | 3.1s |
-| Claude-3.5 | 88% | 92% | 89% | 91% | 87% | $0.045 | 2.8s |
+| GPT-4o-mini | 85% | 90% | 88% | 92% | 85% | $0.015 | 2.3s |
+| GPT-4o | 92% | 94% | 91% | 94% | 90% | $0.060 | 3.1s |
+| Phi-3-mini-128k-instruct | 82% | 85% | 80% | 88% | 82% | $0.005 | 1.8s |
 
 ### Prompt-Specific Analysis
 #### [Prompt Name]
@@ -165,9 +170,9 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 ## Recommendations
 
 ### Model Selection Guidelines
-- **For Cost-Sensitive Projects**: Use GPT-4.1-mini
-- **For Maximum Quality**: Use GPT-4
-- **For Balanced Performance**: Use Claude-3.5-Sonnet
+- **For Cost-Sensitive Projects**: Use GPT-4o-mini or Phi-3-mini-128k-instruct
+- **For Maximum Quality**: Use GPT-4o or Meta-Llama-3.1-405B-Instruct
+- **For Balanced Performance**: Use Mistral-large or Cohere-command-r-plus
 
 ### Prompt Optimization Opportunities
 1. **High-Impact Improvements**: [List top 3 prompts to optimize]
@@ -178,9 +183,10 @@ Systematically evaluate and compare the effectiveness of prompts, instructions, 
 ## Implementation Guidelines
 
 ### Setup Requirements
-- Access to multiple LLM APIs (OpenAI, Anthropic, Google)
-- API key management and rotation
-- Rate limiting and cost monitoring
+- GitHub personal access token with GitHub Models access
+- Access to GitHub Models API (models.inference.ai.azure.com)
+- Authentication via GitHub token (current user)
+- Rate limiting and cost monitoring through GitHub
 - Result storage and analysis tools
 
 ### Testing Best Practices

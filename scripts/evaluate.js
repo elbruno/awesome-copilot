@@ -33,13 +33,18 @@ const CONFIG = {
   // Output directory for evaluation results
   outputDir: 'evaluation-results',
   
-  // Models to evaluate against
+  // GitHub Models to evaluate against
   models: [
-    'gpt-4.1-mini',
-    'gpt-4', 
-    'gpt-4-turbo',
-    'claude-3.5-sonnet',
-    'gemini-pro'
+    'gpt-4o-mini',
+    'gpt-4o',
+    'Phi-3-mini-128k-instruct',
+    'Phi-3-medium-128k-instruct',
+    'Meta-Llama-3.1-70B-Instruct',
+    'Meta-Llama-3.1-405B-Instruct',
+    'Mistral-large',
+    'Mistral-Nemo',
+    'Cohere-command-r',
+    'Cohere-command-r-plus'
   ],
   
   // Evaluation metrics

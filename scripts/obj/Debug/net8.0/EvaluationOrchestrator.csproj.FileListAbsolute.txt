@@ -1,0 +1,15 @@
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/bin/Debug/net8.0/EvaluationOrchestrator
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/bin/Debug/net8.0/EvaluationOrchestrator.deps.json
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/bin/Debug/net8.0/EvaluationOrchestrator.runtimeconfig.json
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/bin/Debug/net8.0/EvaluationOrchestrator.dll
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/bin/Debug/net8.0/EvaluationOrchestrator.pdb
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/EvaluationOrchestrator.GeneratedMSBuildEditorConfig.editorconfig
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/EvaluationOrchestrator.AssemblyInfoInputs.cache
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/EvaluationOrchestrator.AssemblyInfo.cs
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/EvaluationOrchestrator.csproj.CoreCompileInputs.cache
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/EvaluationOrchestrator.sourcelink.json
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/EvaluationOrchestrator.dll
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/refint/EvaluationOrchestrator.dll
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/EvaluationOrchestrator.pdb
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/EvaluationOrchestrator.genruntimeconfig.cache
+/home/runner/work/awesome-copilot/awesome-copilot/scripts/obj/Debug/net8.0/ref/EvaluationOrchestrator.dll

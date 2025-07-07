@@ -1,10 +1,10 @@
 # Prompt Evaluation Framework
 
-A comprehensive system for evaluating and comparing the effectiveness of prompts, instructions, and chatmodes against different LLM models like GPT-4.1-mini, GPT-4, Claude, and others.
+A comprehensive system for evaluating and comparing the effectiveness of prompts, instructions, and chatmodes against different LLM models using GitHub Models API with your GitHub personal access token.
 
 ## Overview
 
-This evaluation framework provides systematic testing and comparison of the awesome-copilot repository's prompts, instructions, and chatmodes across multiple LLM models. It helps identify:
+This evaluation framework provides systematic testing and comparison of the awesome-copilot repository's prompts, instructions, and chatmodes across multiple LLM models available through GitHub Models. It helps identify:
 
 - **Best performing models** for specific use cases
 - **Cost-effective solutions** for different scenarios
@@ -19,16 +19,73 @@ A comprehensive prompt that defines the evaluation methodology, metrics, and rep
 ### 2. Prompt Evaluator Chatmode (`chatmodes/prompt-evaluator.chatmode.md`)
 A specialized chatmode for conducting structured evaluations. Switch to this mode when you need to evaluate specific prompts or run comparative analyses.
 
-### 3. Evaluation Orchestrator (`scripts/evaluate.js`)
-A Node.js script that automates the discovery, planning, and reporting of evaluations across the repository.
+### 3. Evaluation Orchestrator (`scripts/evaluate.js|py|cs`)
+A multi-language script suite that automates the discovery, planning, and reporting of evaluations across the repository. Available in JavaScript (Node.js), Python, and .NET versions.
+
+## Language Options
+
+The evaluation framework is available in multiple programming languages to accommodate different development environments:
+
+### JavaScript/Node.js (`evaluate.js`)
+```bash
+# Prerequisites: Node.js 16+ installed
+node scripts/evaluate.js <command>
+```
+
+### Python (`evaluate.py`)
+```bash
+# Prerequisites: Python 3.8+ installed
+python scripts/evaluate.py <command>
+```
+
+### .NET (`EvaluationOrchestrator.cs`)
+```bash
+# Prerequisites: .NET 8.0+ installed
+dotnet run --project scripts/EvaluationOrchestrator.csproj <command>
+```
+
+All implementations provide the same functionality:
+- Discover evaluation targets
+- Generate evaluation plans 
+- Create report templates
+- Test GitHub Models API connectivity
+- Support for the same GitHub Models
 
 ## Quick Start
 
-### Step 1: Generate Evaluation Overview
+### Step 1: Setup GitHub Token
+
+Set your GitHub personal access token to access GitHub Models:
+
+**Windows:**
+```cmd
+set GITHUB_TOKEN=your_github_token_here
+```
+
+**Linux/macOS:**
+```bash
+export GITHUB_TOKEN=your_github_token_here
+```
+
+**Test the connection:**
+```bash
+# JavaScript/Node.js
+node scripts/evaluate.js test-connection
+
+# Python
+python scripts/evaluate.py test-connection
+
+# .NET
+cd scripts && dotnet run test-connection
+```
+
+### Step 2: Generate Evaluation Overview
 
 ```bash
 # Get a summary of what can be evaluated
-node scripts/evaluate.js summary
+node scripts/evaluate.js summary          # JavaScript
+python scripts/evaluate.py summary        # Python  
+cd scripts && dotnet run summary          # .NET
 ```
 
 Example output:
@@ -38,29 +95,33 @@ Total files: 67
 - Prompts: 36
 - Instructions: 22
 - Chatmodes: 9
-Models to test: 5
-Total evaluation combinations: 335
+Models to test: 10
+Total evaluation combinations: 670
 ```
 
-### Step 2: Create Evaluation Plan
+### Step 3: Create Evaluation Plan
 
 ```bash
 # Generate a detailed evaluation plan
-node scripts/evaluate.js plan
+node scripts/evaluate.js plan             # JavaScript
+python scripts/evaluate.py plan           # Python
+cd scripts && dotnet run plan             # .NET
 ```
 
 This creates `evaluation-results/evaluation-plan.json` with a structured plan for testing all combinations.
 
-### Step 3: Generate Report Template
+### Step 4: Generate Report Template
 
 ```bash
 # Create a report template
-node scripts/evaluate.js report
+node scripts/evaluate.js report           # JavaScript
+python scripts/evaluate.py report         # Python
+cd scripts && dotnet run report           # .NET
 ```
 
 This creates `evaluation-results/evaluation-report.md` with a structured template for documenting results.
 
-### Step 4: Conduct Evaluations
+### Step 5: Conduct Evaluations
 
 Use GitHub Copilot with the evaluation tools:
 
@@ -72,13 +133,18 @@ Use GitHub Copilot with the evaluation tools:
 
 ### Models Tested
 
-The framework supports evaluation against multiple LLM models:
+The framework supports evaluation against multiple LLM models available through GitHub Models:
 
-- **GPT-4.1-mini** - Cost-effective option
-- **GPT-4** - High-quality baseline
-- **GPT-4 Turbo** - Performance comparison
-- **Claude-3.5-Sonnet** - Anthropic alternative
-- **Gemini Pro** - Google alternative
+- **GPT-4o-mini** - Cost-effective OpenAI model
+- **GPT-4o** - High-quality OpenAI model  
+- **Phi-3-mini-128k-instruct** - Microsoft compact model
+- **Phi-3-medium-128k-instruct** - Microsoft medium model
+- **Meta-Llama-3.1-70B-Instruct** - Meta large model
+- **Meta-Llama-3.1-405B-Instruct** - Meta extra large model
+- **Mistral-large** - Mistral AI large model
+- **Mistral-Nemo** - Mistral AI compact model
+- **Cohere-command-r** - Cohere standard model
+- **Cohere-command-r-plus** - Cohere enhanced model
 
 ### Evaluation Metrics
 
@@ -111,7 +177,7 @@ I want to evaluate the `create-implementation-plan.prompt.md` against different 
 
 Please use the prompt-evaluator chatmode to:
 1. Analyze the prompt structure and content
-2. Test it against GPT-4.1-mini, GPT-4, and Claude-3.5-Sonnet
+2. Test it against GPT-4o-mini, GPT-4o, and Phi-3-mini-128k-instruct
 3. Compare response quality, speed, and cost
 4. Provide optimization recommendations
 ```
@@ -143,9 +209,9 @@ Compare models on accuracy, consistency, and cost for code review scenarios.
 
 | Model | Accuracy | Relevance | Completeness | Clarity | Consistency | Cost | Time |
 |-------|----------|-----------|--------------|---------|-------------|------|------|
-| GPT-4.1-mini | 8.5/10 | 9.0/10 | 8.8/10 | 9.2/10 | 8.5/10 | $0.015 | 2.3s |
-| GPT-4 | 9.2/10 | 9.4/10 | 9.1/10 | 9.4/10 | 9.0/10 | $0.060 | 3.1s |
-| Claude-3.5 | 8.8/10 | 9.2/10 | 8.9/10 | 9.1/10 | 8.7/10 | $0.045 | 2.8s |
+| GPT-4o-mini | 8.5/10 | 9.0/10 | 8.8/10 | 9.2/10 | 8.5/10 | $0.015 | 2.3s |
+| GPT-4o | 9.2/10 | 9.4/10 | 9.1/10 | 9.4/10 | 9.0/10 | $0.060 | 3.1s |
+| Phi-3-mini-128k-instruct | 8.0/10 | 8.5/10 | 8.0/10 | 8.8/10 | 8.2/10 | $0.005 | 1.8s |
 
 ### Interpretation Guidelines
 
