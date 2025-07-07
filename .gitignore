@@ -1,3 +1,13 @@
 node_modules
 *.orig
 Copilot-Processing.md
+evaluation-results/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# .NET build artifacts
+scripts/bin/
+scripts/obj/
